@@ -1,4 +1,4 @@
-﻿---
+---
 name: paymob-integration
 description: >
   Guides developers through integrating Paymob payment gateway into their applications.

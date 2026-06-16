@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- Frontend (React / Next.js / Vue)
+# Paymob Integration -- Frontend (React / Next.js / Vue)
 
 ## Checkout Flow (All Frameworks)
 

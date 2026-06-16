@@ -1,4 +1,4 @@
-﻿# Paymob Subscriptions
+# Paymob Subscriptions
 
 Paymob supports recurring billing through the Subscription Plans API. Subscriptions are available for selected merchants -- contact Paymob to enable this feature.
 

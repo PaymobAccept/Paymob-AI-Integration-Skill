@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- Mobile (React Native / Flutter)
+# Paymob Integration -- Mobile (React Native / Flutter)
 
 ## Overview
 

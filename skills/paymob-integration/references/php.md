@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- PHP
+# Paymob Integration -- PHP
 
 ## Environment Variables (.env)
 

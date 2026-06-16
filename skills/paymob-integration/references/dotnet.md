@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- .NET / C#
+# Paymob Integration -- .NET / C#
 
 ## Environment Variables
 

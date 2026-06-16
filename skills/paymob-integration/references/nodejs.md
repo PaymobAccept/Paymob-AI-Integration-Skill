@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- Node.js / TypeScript
+# Paymob Integration -- Node.js / TypeScript
 
 ## Environment Variables (.env)
 

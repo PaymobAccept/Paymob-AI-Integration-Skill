@@ -1,4 +1,4 @@
-﻿# Paymob Saved Cards -- CIT / MIT
+# Paymob Saved Cards -- CIT / MIT
 
 Paymob supports saving card tokens for future payments (saved cards / one-click checkout).
 

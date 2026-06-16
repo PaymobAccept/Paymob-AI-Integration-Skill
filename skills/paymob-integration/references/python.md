@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- Python
+# Paymob Integration -- Python
 
 ## Environment Variables
 

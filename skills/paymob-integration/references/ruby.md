@@ -1,4 +1,4 @@
-﻿# Paymob Integration -- Ruby / Ruby on Rails
+# Paymob Integration -- Ruby / Ruby on Rails
 
 ## Environment Variables
 

@@ -1,4 +1,4 @@
-﻿# Paymob HMAC Validation -- Complete Reference
+# Paymob HMAC Validation -- Complete Reference
 
 Always use **SHA-512**. Paymob sends HMAC as a query parameter on both webhook notification and redirect URLs.
 
