@@ -3,8 +3,8 @@
   "description": "Expert guidance for integrating Paymob payment gateway. Covers the Intention API for card payments, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments across all regions. Supports Node.js, Python, PHP, .NET, Ruby, React, Flutter, and native mobile SDKs.",
   "version": "2.0.0",
   "author": {
-    "name": "Paymob Engineering",
-    "email": "developer@paymob.com"
+    "name": "Paymob Support",
+    "email": "mohamedragab@paymob.com"
   },
   "homepage": "https://github.com/PaymobAccept/Paymob-Claude-Integration-Skill",
   "repository": {
