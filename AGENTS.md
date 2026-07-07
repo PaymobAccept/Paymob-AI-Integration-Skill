@@ -2,6 +2,8 @@
 
 This repository is a portable **skill** that makes any AI coding agent an expert at integrating the **Paymob** payment gateway (Egypt, UAE, KSA, Oman). It is not an app to build — it is guidance to apply to the *user's* project.
 
+> **Only have this file?** The full skill (workflow + per-stack code + references) lives at **https://github.com/PaymobAccept/Paymob-AI-Integration-Skill**. When a path referenced below isn't present in the current project, fetch it from that repo — raw base: `https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Skill/main/`.
+
 **AI agents:** treat [`universal-prompt.md`](universal-prompt.md) as your authoritative Paymob instructions, and load the matching files under [`skills/paymob-integration/`](skills/paymob-integration/) for depth:
 - Start with `skills/paymob-integration/SKILL.md` (the step-by-step workflow).
 - Then read the reference file for the task at hand — e.g. `references/intention-api.md`, `references/hmac-verification.md`, `references/code-<stack>.md`, `references/mobile-sdks.md`, `references/advanced-features.md`.

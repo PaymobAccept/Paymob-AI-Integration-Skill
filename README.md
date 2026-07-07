@@ -1,6 +1,6 @@
 # Paymob Integration Skill for AI Agents
 
-![version](https://img.shields.io/badge/version-3.1.0-blue)
+![version](https://img.shields.io/badge/version-3.2.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
@@ -13,19 +13,50 @@ Ships as a Claude Code / Cowork plugin **and** as a portable prompt (`universal-
 
 ## Works with any AI agent
 
-The guidance is plain Markdown + code, so it's agent-agnostic. Pick the entrypoint your tool understands:
+It's all plain Markdown — any AI assistant can use it. Find your tool below; most setups take a single step.
 
-| Agent / tool | How to use |
+### 1. Coding agents → drop in `AGENTS.md` (easiest, recommended)
+
+[`AGENTS.md`](https://agents.md) is an open standard that coding agents read **automatically** from your project's root folder. Natively supported by **OpenAI Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Zed, Jules, Devin, Factory, Amp, RooCode, Warp, JetBrains Junie**, and more.
+
+**One step** — copy this repo's [`AGENTS.md`](AGENTS.md) into the root of *your* project:
+
+```bash
+# run this from your project's root folder
+curl -O https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Skill/main/AGENTS.md
+```
+
+- Already have an `AGENTS.md`? Just paste this one's contents into it under a `## Paymob` heading.
+- Now ask your agent in plain English — *"Add Paymob card payments to my checkout"* — and it follows the Paymob rules automatically.
+
+### 2. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
+
+1. Open [`universal-prompt.md`](universal-prompt.md) and **copy the whole file**.
+2. Paste it into the assistant's **system prompt** / **custom instructions** (ChatGPT: *Settings → Personalization → Custom instructions*; Gemini: a *Gem*; Claude.ai: a *Project*'s instructions).
+3. Describe what you're building. It's fully self-contained — no other files needed.
+
+### 3. Prefer a pinned editor rules file? (optional)
+
+If you'd rather use your editor's native rules file instead of `AGENTS.md`, save [`universal-prompt.md`](universal-prompt.md) as:
+
+| Tool | Save it as (in your project) |
 |---|---|
-| **Claude Code** / **Cowork** | Install as a plugin (see below) — auto-activates as an Agent Skill |
-| **OpenAI Codex**, **Aider**, **Zed**, **Gemini CLI**, **Jules** | Copy [`AGENTS.md`](AGENTS.md) into your project root — these tools read it automatically |
-| **Cursor** | Add [`universal-prompt.md`](universal-prompt.md) as a rule (`.cursor/rules/paymob.mdc`) or `@`-reference it in chat |
-| **Windsurf** | Drop the prompt into `.windsurf/rules/paymob.md` (or `.windsurfrules`) |
-| **GitHub Copilot** | Paste the prompt into `.github/copilot-instructions.md` |
-| **Cline**, **Continue**, **Roo** | Add `universal-prompt.md` as a rules / context file |
-| **ChatGPT**, **Gemini**, **Claude.ai**, any chat UI | Paste [`universal-prompt.md`](universal-prompt.md) into the system prompt / custom instructions |
+| Cursor | `.cursor/rules/paymob.mdc` |
+| Windsurf / Devin Desktop | `.windsurf/rules/paymob.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Cline · Continue · Roo | the tool's rules / context file |
 
-> Single source of truth: the full skill lives in `skills/paymob-integration/`. `universal-prompt.md` is the portable distillation, and `AGENTS.md` is a concise cross-agent router to it — so there's no drift between versions.
+### 4. Claude Code / Cowork → install the full plugin
+
+One command installs the complete workflow **and** auto-registers the bundled live Paymob MCP server (see [below](#live-access--paymob-mcp-server)):
+
+```bash
+claude plugin install --git https://github.com/PaymobAccept/Paymob-AI-Integration-Skill
+```
+
+Cowork and local-dev options are under [Installation](#installation).
+
+> **One source of truth, no drift:** the full skill lives in `skills/paymob-integration/`; `universal-prompt.md` is its self-contained portable copy; `AGENTS.md` is a short router to it.
 
 ---
 
