@@ -1,7 +1,7 @@
 {
   "name": "paymob-integration",
-  "description": "Expert guidance for integrating Paymob payment gateway. Covers the Intention API for card payments, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments across all regions. Supports Node.js, Python, PHP, .NET, Ruby, React, Flutter, and native mobile SDKs.",
-  "version": "2.0.0",
+  "description": "Expert, workflow-driven guidance for integrating the Paymob payment gateway across Egypt, UAE, KSA, and Oman. Routes by platform (Shopify apps / prebuilt e-commerce plugins vs custom build), onboarding, web/API (Intention API + Unified Checkout + Pixel SDK), and native Mobile SDKs. Covers all 3 HMAC types (transaction, card token, subscription), transaction inquiry/reconciliation, subscriptions, saved cards (CIT/MIT), Auth/Capture, refunds/void, split features, and convenience fees, and ships corrected ready-to-use code for Node.js, Python, PHP, .NET, Ruby, and frontend. Triggers even when no provider is named for a regional payment request.",
+  "version": "3.0.0",
   "author": {
     "name": "Paymob Support",
     "email": "mohamedragab@paymob.com"
@@ -17,14 +17,25 @@
     "payment",
     "gateway",
     "egypt",
+    "uae",
+    "ksa",
+    "oman",
     "mena",
     "weaccept",
     "fintech",
-    "integration",
+    "intention-api",
+    "unified-checkout",
+    "pixel-sdk",
+    "hmac",
+    "webhook",
+    "shopify",
+    "woocommerce",
+    "subscriptions",
+    "saved-cards",
+    "mobile-sdk",
     "claude",
     "claude-code",
     "claude-skill",
-    "webhook",
-    "hmac"
+    "integration"
   ]
 }

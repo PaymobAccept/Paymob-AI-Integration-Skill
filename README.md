@@ -1,18 +1,20 @@
 # Paymob Integration Plugin for Claude
 
-A Claude Code / Cowork plugin that gives Claude expert-level knowledge of Paymob payment gateway integration. It guides developers step-by-step through accepting payments via cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments across any tech stack.
+A Claude Code / Cowork plugin that gives Claude expert-level, **workflow-driven** knowledge of Paymob payment gateway integration across **Egypt, UAE, KSA, and Oman**. It routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments on any tech stack.
 
 ## What It Does
 
 When you ask Claude for help integrating Paymob, this plugin provides:
 
-- **Complete Intention API knowledge** — the official payment creation flow with Unified Checkout and Pixel SDK
-- **Working code in your stack** — Node.js/TypeScript, Python/Django/Flask/FastAPI, PHP/Laravel, .NET/C#, Ruby/Rails, React/Next.js/Vue, iOS/Android/Flutter/React Native
-- **HMAC webhook validation** — all 3 types (transaction, card token, subscription), exact field orders, SHA-512 implementations
-- **Core features** — subscriptions, saved cards (CIT/MIT), Auth/Cap, split features, convenience fees
-- **Multi-region support** — Egypt, Saudi Arabia, UAE, Oman with correct base URLs
-- **Troubleshooting** — instant diagnosis of common errors like integration ID mismatches, auth failures, HMAC mismatches
-- **Security best practices** — credential handling, test vs live environments, and production readiness checks
+- **Platform routing first** — detects Shopify, an official e-commerce plugin platform (WooCommerce, Magento, Odoo, OpenCart, PrestaShop, …), or a custom build, and steers you to the fastest correct path instead of hand-coding when a prebuilt integration exists.
+- **Guided onboarding** — merchant-status check, dashboard credential collection, and sandbox-first testing before go-live.
+- **Complete Intention API knowledge** — the only official payment-creation flow, with Unified Checkout (redirect) and the Pixel SDK (embedded).
+- **Native Mobile SDK flow** — iOS/Android/Flutter/React Native, with the Secret Key kept off the device.
+- **Corrected, copy-ready code in your stack** — Node.js/TypeScript/NestJS, Python/Django/Flask/FastAPI, PHP/Laravel, .NET/C#, Ruby/Rails, and React/Next.js/Vue.
+- **All 3 HMAC types** — transaction, card token, and subscription — with exact field orders, SHA-512, and timing-safe comparison.
+- **Reconciliation** — a Transaction Inquiry fallback for callbacks that never arrive, stuck "pending" orders, and admin lookups.
+- **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
+- **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard, and community forum so the agent can confirm anything that may have changed.
 
 ## Installation
 
@@ -35,36 +37,41 @@ claude --plugin-dir ./Paymob-Claude-Integration-Skill
 
 ## Usage
 
-Once installed, Claude automatically activates the skill when you ask about Paymob. Try prompts like:
+Once installed, Claude automatically activates the skill when you ask about Paymob — or even for a generic regional payment request ("add a payment gateway to my UAE store"). Try prompts like:
 
 - "Help me integrate Paymob card payments in my Next.js app"
 - "Add Vodafone Cash wallet payments to my Laravel backend"
 - "My Paymob HMAC validation keeps failing — here's my code..."
 - "Set up Paymob subscriptions with Python/FastAPI"
 - "Integrate Apple Pay with Paymob in my React Native app"
-- "What credentials do I need from the Paymob dashboard?"
+- "Reconcile a Paymob order that's stuck pending"
+- "Add Paymob to my Shopify / WooCommerce store"
 
 ## Plugin Structure
 
 ```
-paymob-integration-plugin/
+Paymob-Claude-Integration-Skill/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin manifest
+│   └── plugin.json                    # Plugin manifest (v3.0.0)
 ├── skills/
 │   └── paymob-integration/
-│       ├── SKILL.md             # Main skill (Intention API, checkout, webhooks, features)
+│       ├── SKILL.md                   # Workflow backbone: platform routing → onboarding → web/mobile → testing
 │       └── references/
-│           ├── nodejs.md        # Node.js / TypeScript / NestJS
-│           ├── python.md        # Python / Django / Flask / FastAPI
-│           ├── php.md           # PHP / Laravel
-│           ├── dotnet.md        # .NET / C#
-│           ├── ruby.md          # Ruby / Rails
-│           ├── frontend.md      # React / Next.js / Vue / Pixel SDK
-│           ├── mobile.md        # iOS / Android / Flutter / React Native native SDKs
-│           ├── hmac-validation.md   # HMAC implementations (all 3 types, all languages)
-│           ├── subscriptions.md     # Subscription plans, management, webhooks
-│           └── saved-cards.md       # Card tokens, CIT, MIT flows
-├── universal-prompt.md          # Cross-platform prompt (ChatGPT, Gemini, etc.)
+│           ├── shopify-apps.md        # Paymob Shopify apps (on-site / off-site / BNPL) + install path
+│           ├── intention-api.md       # Create Intention spec, Unified Checkout, common errors
+│           ├── mobile-sdks.md         # Native SDK flow (iOS / Android / Flutter / React Native)
+│           ├── hmac-verification.md   # Transaction HMAC: field order, SHA-512, worked example
+│           ├── transaction-inquiry.md # Pull-based status checks / reconciliation
+│           ├── test-credentials.md    # Sandbox cards, wallets, OTPs
+│           ├── advanced-features.md   # Subscriptions, saved cards (CIT/MIT), Auth/Cap, refund/void, split, fees
+│           ├── live-resources.md      # llms.txt, dev docs, Integration Wizard, community — when/how to use
+│           ├── code-nodejs.md         # Node.js / TypeScript / Express / NestJS
+│           ├── code-python.md         # Python / Django / Flask / FastAPI
+│           ├── code-php.md            # PHP / Laravel
+│           ├── code-dotnet.md         # .NET / C# / ASP.NET
+│           ├── code-ruby.md           # Ruby / Rails
+│           └── code-frontend.md       # React / Next.js / Vue + Unified Checkout / Pixel SDK
+├── universal-prompt.md                # Cross-platform prompt (ChatGPT, Gemini, Cursor, Windsurf, …)
 ├── LICENSE
 └── README.md
 ```
@@ -73,9 +80,9 @@ paymob-integration-plugin/
 
 | Method | Regions | Notes |
 |--------|---------|-------|
-| **Cards** (Visa, MC, Amex, MADA, OmanNet) | EGY, KSA, UAE, OMN | 3DS, Moto, Card-on-File, Auth/Cap |
-| **Mobile Wallets** (Vodafone Cash, Orange Cash, StcPay, etc.) | EGY, KSA | — |
-| **BNPLs** (Valu, Tabby, Tamara, Souhoola, Sympl, etc.) | EGY, KSA, UAE | 15+ providers |
+| **Cards** (Visa, MC, Amex, MADA, OmanNet) | EGY, KSA, UAE, OMN | 3DS, MOTO, Card-on-File, Auth/Cap |
+| **Mobile Wallets** (Vodafone Cash, Orange Cash, e& money, WePay, StcPay) | EGY, KSA | — |
+| **BNPLs** (Valu, Tabby, Tamara, Souhoola, Sympl, and more) | EGY, KSA, UAE | 15+ providers |
 | **Apple Pay** | EGY, KSA, UAE, OMN | Requires certificates |
 | **Google Pay** | KSA, UAE, OMN | Not yet in Egypt |
 | **Bank Installments** | EGY | Live IDs only |
@@ -89,6 +96,10 @@ paymob-integration-plugin/
 | Oman (OMN) | `https://oman.paymob.com` |
 | Saudi Arabia (KSA) | `https://ksa.paymob.com` |
 | UAE | `https://uae.paymob.com` |
+
+## Staying Current
+
+Specs embedded here are known-good as of **June 2026**. Paymob changes endpoints, field orders, and SDK versions on its own schedule — the skill instructs the agent to cross-check the live docs (`references/live-resources.md`, especially the machine-readable `llms.txt` index) and lets the live docs win on any disagreement.
 
 ## Contributing
 
