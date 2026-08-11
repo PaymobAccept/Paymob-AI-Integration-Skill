@@ -146,7 +146,7 @@ app.MapPost("/api/checkout", async (CheckoutDto dto, PaymobService paymob, Paymo
     return Results.Ok(new { checkoutUrl = paymob.CheckoutUrl(clientSecret) });
 });
 
-app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob) =>
+app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob, IPaymobPaymentEventStore paymentStore) =>
 {
     using var doc = await JsonDocument.ParseAsync(req.Body);
     if (!doc.RootElement.TryGetProperty("obj", out var obj))
@@ -158,7 +158,10 @@ app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob)
 
     if (obj.GetProperty("success").GetBoolean() && !obj.GetProperty("pending").GetBoolean())
     {
-        // MarkOrderPaid(obj.GetProperty("order").GetProperty("id")) idempotently, then fulfill
+        await paymentStore.RecordSuccessfulEventAsync(
+            providerEventId: obj.GetProperty("id").ToString(),
+            paymobOrderId: obj.GetProperty("order").GetProperty("id").ToString(),
+            merchantOrderId: obj.GetProperty("order").GetProperty("merchant_order_id").ToString());
     }
     return Results.Ok(new { received = true });
 });
@@ -166,7 +169,9 @@ app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob)
 record CheckoutDto(decimal Amount, string OrderId, string FirstName, string LastName, string Email, string Phone);
 ```
 
-Register in DI: `builder.Services.AddSingleton(paymobOptions); builder.Services.AddHttpClient<PaymobService>();`
+`IPaymobPaymentEventStore.RecordSuccessfulEventAsync` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures propagate to non-2xx; only the outbox worker fulfills.
+
+Register in DI: `builder.Services.AddSingleton(paymobOptions); builder.Services.AddHttpClient<PaymobService>(); builder.Services.AddScoped<IPaymobPaymentEventStore, PaymobPaymentEventStore>();`
 
 ## Gotchas
 

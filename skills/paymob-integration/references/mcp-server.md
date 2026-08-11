@@ -90,7 +90,9 @@ Then call any action tool. Prefer the `elicit_*` tools for guided, step-by-step 
 ## Security
 
 - **Credentials are yours.** The server acts with your Paymob API key + secret key. Never paste **live** keys until you've validated the flow in **test mode** (`is_live: false`).
-- **It can move money.** `request_instant_settlement` transfers funds to your bank; `create_payment_intention`, `create_payment_link`, and `create_invoice` create real payment obligations when `is_live: true`. Confirm intent before invoking these in live mode, and don't let an unattended agent call them without review.
+- **It can move money.** `request_instant_settlement` transfers funds to your bank; `create_payment_intention`, `create_payment_link`, and `create_invoice` create real payment obligations when `is_live: true`.
+- **Authorize each live write.** The primary agent must confirm the current account, mode, operation, target, amount, and currency with the user. Do not reuse blanket approval, share credentials with subagents, or let an unattended agent call authenticated tools.
+- **Prevent duplicate writes.** Read remote state first and retain a stable operation fingerprint/merchant reference. Never automatically retry a timeout or ambiguous response; query by the same reference to determine whether the original succeeded, then verify and report the resulting remote status.
 - **Don't commit secrets.** The `.mcp.json` in this repo contains only the public endpoint URL — no keys. Credentials are supplied at runtime via the credential-setup tool, not stored in the repo.
 - **Prefer read-only for automation.** For dashboards/reconciliation jobs, lean on the `get_*` / `export_*` tools, which are read-only.
 

@@ -137,12 +137,20 @@ class PaymentsController < ApplicationController
       return render json: { error: "Invalid HMAC" }, status: :unauthorized
     end
     if obj["success"] && !obj["pending"]
-      # mark_order_paid(obj.dig("order", "id")) idempotently, then fulfill
+      PaymobPaymentEventStore.record_successful_event!(
+        provider_event_id: obj["id"].to_s,
+        paymob_order_id: obj.dig("order", "id").to_s,
+        merchant_order_id: obj.dig("order", "merchant_order_id").to_s
+      )
     end
     render json: { received: true }
   end
 end
 ```
+
+`PaymobPaymentEventStore.record_successful_event!` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. The bang method must raise on failure so Rails returns non-2xx; only the outbox worker fulfills.
+
+## Gotchas
 
 ## Gotchas
 

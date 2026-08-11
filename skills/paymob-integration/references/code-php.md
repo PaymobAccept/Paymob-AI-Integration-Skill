@@ -140,6 +140,7 @@ class Paymob
 ```php
 // routes/web.php  (or api.php)
 use Illuminate\Http\Request;
+use App\Contracts\PaymobPaymentEventStore;
 
 Route::post('/api/paymob/webhook', function (Request $request) {
     $paymob   = new Paymob();
@@ -150,11 +151,17 @@ Route::post('/api/paymob/webhook', function (Request $request) {
         return response()->json(['error' => 'Invalid HMAC'], 401);
     }
     if (($obj['success'] ?? false) && ! ($obj['pending'] ?? false)) {
-        // markOrderPaid($obj['order']['id']) idempotently, then fulfill
+        app(PaymobPaymentEventStore::class)->recordSuccessfulEvent(
+            providerEventId: (string) $obj['id'],
+            paymobOrderId: (string) $obj['order']['id'],
+            merchantOrderId: (string) ($obj['order']['merchant_order_id'] ?? ''),
+        );
     }
     return response()->json(['received' => true]);  // 200 stops Paymob retries
 });
 ```
+
+`PaymobPaymentEventStore::recordSuccessfulEvent` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `$obj['id']`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures propagate to non-2xx; only the outbox worker fulfills.
 
 In Laravel, exclude this route from CSRF protection (add the path to `VerifyCsrfToken::$except`).
 

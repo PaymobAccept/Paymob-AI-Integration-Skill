@@ -61,8 +61,13 @@ Resulting HMAC (SHA-512, hex, lowercase) — using the merchant's own HMAC secre
 - Watch out for `obj.order.id` vs a top-level `id` — both `id` and `order.id` appear in the list as separate fields; don't conflate them.
 - If a field is missing/null in a given callback type, check the live payload structure rather than assuming — different callback types (Transaction Processed vs Card Token) have different field lists and orders. This file covers the standard **Transaction Processed callback**. If the merchant also needs card-token callbacks (for "pay with saved card"), fetch the current field order from `https://developers.paymob.com/paymob-docs/developers/webhook-callbacks-and-hmac/hmac/hmac-for-card-tokens` before implementing, since the field set differs (it includes things like `card_subtype`, `email`, masked PAN, etc.) and getting the order wrong silently breaks verification.
 - Always log the raw callback body once during development/testing so you can confirm your field extraction matches reality for this specific merchant's payment methods — wallets and cards can return slightly different nested shapes.
-- Respond `200 OK` to Paymob promptly (process asynchronously if your business logic is slow) — webhook senders typically retry on non-2xx or timeout, which can cause duplicate processing if you're not idempotent on `order.id` / `special_reference`.
+- Respond `200 OK` to Paymob promptly (process asynchronously if your business logic is slow) — webhook senders typically retry on non-2xx or timeout, which can cause duplicate processing unless `obj.id` is uniquely recorded and the order transition plus fulfillment outbox insert commit atomically.
 
 ## Idempotency
 
-Use `special_reference` (your own order ID, returned as `merchant_order_id`) or Paymob's `order.id` as your idempotency key — guard against processing the same successful callback twice if Paymob retries delivery.
+Make webhook handling concurrency-safe; an application-level "already processed" check is not enough:
+
+- Use Paymob's transaction/event ID (`obj.id`) as the provider-event idempotency key with a database **unique constraint**. Keep `special_reference` / `order.id` as the order correlation key, because one order can have multiple payment attempts.
+- In one atomic database transaction, insert the unique provider event, compare-and-set the order from an allowed unpaid/pending state to paid, and insert a uniquely keyed transactional outbox/fulfillment record.
+- Treat a duplicate event insert or a losing compare-and-set as a successful no-op. Only the committed outbox worker performs fulfillment, so simultaneous valid callbacks cannot fulfill twice.
+- Return `2xx` only after that database transaction commits. If slow external fulfillment is needed, perform it asynchronously from the outbox.

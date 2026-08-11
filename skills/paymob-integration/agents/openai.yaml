@@ -1,0 +1,15 @@
+interface:
+  display_name: "Paymob Integration"
+  short_description: "Build and verify secure Paymob payment flows"
+  default_prompt: "Use $paymob-integration to add a secure Paymob checkout and webhook flow to my application."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "paymob"
+      description: "Official Paymob MCP server for authorized account actions"
+      transport: "streamable_http"
+      url: "https://mcp.paymob.com/mcp"
+
+policy:
+  allow_implicit_invocation: true

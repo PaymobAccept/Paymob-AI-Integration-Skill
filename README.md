@@ -1,13 +1,13 @@
 # Paymob Integration Skill for AI Agents
 
-![version](https://img.shields.io/badge/version-3.2.0-blue)
+![version](https://img.shields.io/badge/version-3.2.1-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
 
 Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](https://paymob.com) payment gateway across **Egypt, UAE, KSA, and Oman**. The agent routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments — on any tech stack.
 
-Ships as a Claude Code / Cowork plugin **and** as a portable prompt (`universal-prompt.md`) + `AGENTS.md` so it works in Cursor, Windsurf, GitHub Copilot, OpenAI Codex, ChatGPT, Gemini, and more.
+Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
 
 ---
 
@@ -15,7 +15,17 @@ Ships as a Claude Code / Cowork plugin **and** as a portable prompt (`universal-
 
 It's all plain Markdown — any AI assistant can use it. Find your tool below; most setups take a single step.
 
-### 1. Coding agents → drop in `AGENTS.md` (easiest, recommended)
+### 1. OpenAI Codex → install the standalone skill
+
+Ask Codex:
+
+```text
+Use $skill-installer to install https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/tree/main/skills/paymob-integration
+```
+
+Targeting the `skills/paymob-integration` subdirectory is required; the repository root is a multi-agent plugin package, not a standalone skill directory. The standalone skill includes all references. Add the optional live Paymob server separately with `codex mcp add paymob --url https://mcp.paymob.com/mcp`.
+
+### 2. Coding agents → drop in `AGENTS.md` (easiest, recommended)
 
 [`AGENTS.md`](https://agents.md) is an open standard that coding agents read **automatically** from your project's root folder. Natively supported by **OpenAI Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Zed, Jules, Devin, Factory, Amp, RooCode, Warp, JetBrains Junie**, and more.
 
@@ -29,13 +39,13 @@ curl -O https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Ski
 - Already have an `AGENTS.md`? Just paste this one's contents into it under a `## Paymob` heading.
 - Now ask your agent in plain English — *"Add Paymob card payments to my checkout"* — and it follows the Paymob rules automatically.
 
-### 2. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
+### 3. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
 
 1. Open [`universal-prompt.md`](universal-prompt.md) and **copy the whole file**.
 2. Paste it into the assistant's **system prompt** / **custom instructions** (ChatGPT: *Settings → Personalization → Custom instructions*; Gemini: a *Gem*; Claude.ai: a *Project*'s instructions).
 3. Describe what you're building. It's fully self-contained — no other files needed.
 
-### 3. Prefer a pinned editor rules file? (optional)
+### 4. Prefer a pinned editor rules file? (optional)
 
 If you'd rather use your editor's native rules file instead of `AGENTS.md`, save [`universal-prompt.md`](universal-prompt.md) as:
 
@@ -46,15 +56,16 @@ If you'd rather use your editor's native rules file instead of `AGENTS.md`, save
 | GitHub Copilot | `.github/copilot-instructions.md` |
 | Cline · Continue · Roo | the tool's rules / context file |
 
-### 4. Claude Code / Cowork → install the full plugin
+### 5. Claude Code / Cowork → install the full plugin
 
-One command installs the complete workflow **and** auto-registers the bundled live Paymob MCP server (see [below](#live-access--paymob-mcp-server)):
+Add this repository as a marketplace, then install the plugin. The plugin auto-registers the bundled live Paymob MCP server (see [below](#live-access--paymob-mcp-server)):
 
 ```bash
-claude plugin install --git https://github.com/PaymobAccept/Paymob-AI-Integration-Skill
+claude plugin marketplace add PaymobAccept/Paymob-AI-Integration-Skill
+claude plugin install paymob-integration@paymob
 ```
 
-Cowork and local-dev options are under [Installation](#installation).
+Cowork and local-development options are under [Installation](#installation).
 
 > **One source of truth, no drift:** the full skill lives in `skills/paymob-integration/`; `universal-prompt.md` is its self-contained portable copy; `AGENTS.md` is a short router to it.
 
@@ -73,6 +84,7 @@ When you ask the agent for help integrating Paymob, it provides:
 - **Reconciliation** — a Transaction Inquiry fallback for callbacks that never arrive, stuck "pending" orders, and admin lookups.
 - **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
 - **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard, and community forum so the agent can confirm anything that may have changed.
+- **Safe multi-agent execution** — separates codebase mapping, live-doc verification, and security review while keeping file edits and all live payment actions serialized through one primary agent.
 
 ---
 
@@ -90,9 +102,10 @@ This plugin **bundles** it: the repo ships a root [`.mcp.json`](.mcp.json), so e
 }
 ```
 
-Or in Claude Code standalone:
+Or in Codex or Claude Code standalone:
 
 ```bash
+codex mcp add paymob --url https://mcp.paymob.com/mcp
 claude mcp add --transport http paymob https://mcp.paymob.com/mcp
 ```
 
@@ -102,17 +115,30 @@ You authenticate **in-session** with your own Paymob API credentials (test mode 
 
 ## Installation
 
+### OpenAI Codex (standalone skill)
+
+In a Codex task, ask:
+
+```text
+Use $skill-installer to install https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/tree/main/skills/paymob-integration
+```
+
+This repository also contains a valid `.codex-plugin/plugin.json` for marketplace packaging. During plugin development, validate the repository first and install it through a configured local marketplace; Codex CLI plugins are installed from marketplace sources.
+
 ### Claude Code (CLI)
 
 ```bash
-claude plugin install --git https://github.com/PaymobAccept/Paymob-AI-Integration-Skill
+claude plugin marketplace add PaymobAccept/Paymob-AI-Integration-Skill
+claude plugin install paymob-integration@paymob
 ```
+
+The repository's `.claude-plugin/marketplace.json` makes the GitHub repository a directly installable custom marketplace. To verify a local checkout before publishing, run `claude plugin validate .`.
 
 ### Cowork (Desktop)
 
-Install from the plugin marketplace, or point to this repo as a custom marketplace source.
+Add `PaymobAccept/Paymob-AI-Integration-Skill` as a custom marketplace source, then install **Paymob Integration** from that marketplace.
 
-### Other agents (Cursor, Windsurf, Copilot, Codex, …)
+### Other agents (Cursor, Windsurf, Copilot, …)
 
 ```bash
 git clone https://github.com/PaymobAccept/Paymob-AI-Integration-Skill.git
@@ -124,6 +150,13 @@ Then follow the [Works with any AI agent](#works-with-any-ai-agent) table — co
 
 ```bash
 claude --plugin-dir ./Paymob-AI-Integration-Skill
+```
+
+Validate the package before publishing:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python scripts/validate.py
 ```
 
 ---
@@ -149,11 +182,16 @@ Paymob-AI-Integration-Skill/
 ├── AGENTS.md                          # Cross-agent entrypoint (Codex, Aider, Zed, Gemini CLI, …)
 ├── universal-prompt.md                # Portable prompt (Cursor, Windsurf, Copilot, ChatGPT, Gemini, …)
 ├── .mcp.json                          # Bundled Paymob MCP server (auto-registers when the plugin is enabled)
+├── .codex-plugin/
+│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.2.1)
 ├── .claude-plugin/
-│   └── plugin.json                    # Claude Code plugin manifest (v3.2.0)
+│   ├── plugin.json                    # Claude Code plugin manifest (v3.2.1)
+│   └── marketplace.json               # Claude custom marketplace catalog
 ├── skills/
 │   └── paymob-integration/
-│       ├── SKILL.md                   # Workflow backbone: platform routing → onboarding → web/mobile → testing
+│       ├── SKILL.md                   # Workflow backbone + multi-agent safety
+│       ├── agents/
+│       │   └── openai.yaml            # Codex UI, invocation, and MCP metadata
 │       └── references/
 │           ├── shopify-apps.md        # Paymob Shopify apps (on-site / off-site / BNPL) + install path
 │           ├── intention-api.md       # Create Intention spec, Unified Checkout, common errors
@@ -170,6 +208,10 @@ Paymob-AI-Integration-Skill/
 │           ├── code-dotnet.md         # .NET / C# / ASP.NET
 │           ├── code-ruby.md           # Ruby / Rails
 │           └── code-frontend.md       # React / Next.js / Vue + Unified Checkout / Pixel SDK
+├── requirements-dev.txt               # PyYAML dependency for schema validation
+├── scripts/
+│   └── validate.py                    # Cross-platform package validation
+├── mind_map.md                        # Compact architecture and maintenance map
 ├── LICENSE
 └── README.md
 ```
@@ -203,7 +245,7 @@ Paymob-AI-Integration-Skill/
 
 - Only the **Public Key** (`pk_*`) is safe in frontend code. The **Secret Key**, **API Key**, and **HMAC Secret** are server-side only — never commit them or ship them in a mobile binary.
 - **The HMAC-verified webhook callback is the source of truth** for payment status — never the browser redirect params or a mobile SDK result.
-- Always verify HMAC with **SHA-512** and a timing-safe comparison, and process callbacks **idempotently** (key on `order.id` / `special_reference`).
+- Always verify HMAC with **SHA-512** and a timing-safe comparison, and process callbacks atomically: unique `obj.id`, compare-and-set order state, and a uniquely keyed transactional outbox; use `order.id` / `special_reference` only for correlation.
 
 ## Staying current
 

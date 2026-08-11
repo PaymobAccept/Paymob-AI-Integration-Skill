@@ -113,6 +113,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .paymob import PaymobClient
+from .payment_store import payment_store
 
 paymob = PaymobClient()
 
@@ -139,9 +140,15 @@ def paymob_webhook(request):
     if not paymob.verify_transaction_post_hmac(obj, received):
         return JsonResponse({"error": "Invalid HMAC"}, status=401)
     if obj.get("success") and not obj.get("pending"):
-        ...  # mark_order_paid(obj["order"]["id"]) idempotently, then fulfill
+        payment_store.record_successful_event(
+            provider_event_id=str(obj["id"]),
+            paymob_order_id=str(obj["order"]["id"]),
+            merchant_order_id=str(obj["order"].get("merchant_order_id", "")),
+        )
     return JsonResponse({"received": True})
 ```
+
+`payment_store.record_successful_event` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures raise so Django returns non-2xx; only the outbox worker fulfills.
 
 ## Flask / FastAPI
 
@@ -154,7 +161,7 @@ received = request.args.get("hmac", ""); body = request.get_json()
 received = request.query_params.get("hmac", ""); body = await request.json()
 ```
 
-In both, pull `obj = body["obj"]`, call `paymob.verify_transaction_post_hmac(obj, received)`, then act on `obj["success"]` idempotently.
+In both, pull `obj = body["obj"]`, call `paymob.verify_transaction_post_hmac(obj, received)`, then apply the same atomic unique-event + compare-and-set + transactional-outbox pattern before fulfillment.
 
 ## Gotchas
 

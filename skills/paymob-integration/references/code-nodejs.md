@@ -103,6 +103,7 @@ export const capture = (txnId: number, amountCents: number) =>
 ```typescript
 import express from 'express';
 import { createIntention, checkoutUrl, verifyTransactionPostHmac } from './paymob';
+import { paymentEventStore } from './payment-event-store';
 
 const router = express.Router();
 
@@ -122,21 +123,30 @@ router.post('/api/checkout', express.json(), async (req, res) => {
 });
 
 // Paymob POSTs the result here; hmac is a query param
-router.post('/api/paymob/webhook', express.json(), (req, res) => {
+router.post('/api/paymob/webhook', express.json(), async (req, res) => {
   const obj = req.body.obj;
   const receivedHmac = String(req.query.hmac ?? '');
   if (!obj || !verifyTransactionPostHmac(obj, receivedHmac)) {
     return res.status(401).json({ error: 'Invalid HMAC' });
   }
-  // Idempotent on order.id / special_reference (merchant_order_id)
   if (obj.success === true && obj.pending === false) {
-    // markOrderPaid(obj.order.id, obj.order.merchant_order_id) — then fulfill
+    try {
+      await paymentEventStore.recordSuccessfulEvent({
+        providerEventId: String(obj.id),
+        paymobOrderId: String(obj.order.id),
+        merchantOrderId: String(obj.order.merchant_order_id),
+      });
+    } catch {
+      return res.status(503).json({ error: 'Payment persistence failed' });
+    }
   }
   res.status(200).json({ received: true });   // 200 even on ignore, to stop retries
 });
 
 export default router;
 ```
+
+`paymentEventStore.recordSuccessfulEvent` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. It must reject on failure so the handler returns non-2xx; only the outbox worker fulfills.
 
 ## NestJS note
 
