@@ -8,6 +8,8 @@ All endpoints below use the regional base URL from `intention-api.md` and, unles
 
 These act on a completed transaction by its `transaction_id` (from the verified callback).
 
+Before any live refund, void, or capture, read the current transaction state and obtain explicit confirmation for this exact account, mode, operation, transaction, amount, and currency. Keep a stable operation fingerprint. Never auto-retry after a timeout or ambiguous response; inquire whether the first request succeeded, then verify and report the final remote state.
+
 ```http
 POST {base_url}/api/acceptance/void_refund/refund
 Authorization: Token {SECRET_KEY}
