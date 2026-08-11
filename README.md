@@ -5,6 +5,8 @@
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
 
+**Claude.ai / ChatGPT skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
+
 Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](https://paymob.com) payment gateway across **Egypt, UAE, KSA, and Oman**. The agent routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments — on any tech stack.
 
 Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
@@ -119,7 +121,13 @@ You authenticate **in-session** with your own Paymob API credentials (test mode 
 
 ### Skill upload (Claude.ai / ChatGPT)
 
-The GitHub source archive is a **multi-agent plugin repository**, so its `SKILL.md` is intentionally nested at `skills/paymob-integration/SKILL.md`. Upload interfaces need a skill-only archive instead. Build it from a checkout:
+**Recommended:** download the permanent release asset and upload it directly—do not extract it:
+
+[`paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip)
+
+GitHub's **Code → Download ZIP** file is the full **multi-agent plugin repository**, so its canonical `SKILL.md` is intentionally nested at `skills/paymob-integration/SKILL.md`. That source archive is for cloning and plugin installation, not skill-upload screens.
+
+To build the same upload package from a local checkout:
 
 ```bash
 python scripts/package_skill.py
@@ -135,9 +143,11 @@ paymob-integration.zip
     └── references/
 ```
 
-`paymob-integration/` is the ZIP's single top-level folder, so `SKILL.md` is not nested behind the repository folder and `skills/`. GitHub Actions also publishes this file as the `paymob-integration-skill-upload` workflow artifact; extract the downloaded Actions artifact once, then upload the contained `paymob-integration.zip`.
+`paymob-integration/` is the ZIP's single top-level folder, so `SKILL.md` is not nested behind the repository folder and `skills/`. Pull-request CI also publishes this file as the `paymob-integration-skill-upload` workflow artifact for pre-release testing; extract an Actions artifact once, then upload the contained `paymob-integration.zip`.
 
 This packaging step only copies the canonical skill into an ignored `dist/` archive. It does not move or duplicate tracked source, so Codex, Claude Code/Cowork plugins, Cursor, Windsurf, Copilot, and other `AGENTS.md` consumers keep their existing installation paths.
+
+A root-level copy, symlink, or shortcut to `SKILL.md` is intentionally not used: upload services may not follow links, while a copied file would create a second source of truth that can drift.
 
 ### OpenAI Codex (standalone skill)
 
@@ -182,6 +192,17 @@ Validate the package before publishing:
 python -m pip install -r requirements-dev.txt
 python scripts/validate.py
 ```
+
+### Publishing the upload package (maintainers)
+
+After merging a version change to `main`, push a tag that exactly matches `.codex-plugin/plugin.json`:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+The release workflow validates the repository, rebuilds the deterministic ZIP, verifies the tag/version match, and publishes `paymob-integration.zip` as a permanent GitHub Release asset. Never upload a hand-built archive or add a root `SKILL.md` copy.
 
 ---
 

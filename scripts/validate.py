@@ -21,6 +21,7 @@ CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 MCP_MANIFEST = ROOT / ".mcp.json"
 OPENAI_METADATA = SKILL_DIR / "agents" / "openai.yaml"
 README = ROOT / "README.md"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 AGENTS = ROOT / "AGENTS.md"
 UNIVERSAL_PROMPT = ROOT / "universal-prompt.md"
 MCP_REFERENCE = SKILL_DIR / "references" / "mcp-server.md"
@@ -227,6 +228,7 @@ def validate_install_docs(version: str, errors: list[str]) -> None:
         "python scripts/package_skill.py",
         "dist/paymob-integration.zip",
         "paymob-integration-skill-upload",
+        "releases/latest/download/paymob-integration.zip",
     )
     for command in required:
         if command not in readme:
@@ -235,6 +237,26 @@ def validate_install_docs(version: str, errors: list[str]) -> None:
         errors.append("README contains the unsupported Claude --git install command")
     if version and f"version-{version}-blue" not in readme:
         errors.append("README version badge must match the plugin manifests")
+
+
+def validate_release_workflow(errors: list[str]) -> None:
+    workflow = read_text(RELEASE_WORKFLOW, errors)
+    if not workflow:
+        return
+    required = (
+        'tags:',
+        '"v*"',
+        'contents: write',
+        'python scripts/validate.py',
+        'python scripts/package_skill.py',
+        'Path(".codex-plugin/plugin.json")',
+        'dist/paymob-integration.zip',
+        'gh release create',
+        '--verify-tag',
+    )
+    for term in required:
+        if term not in workflow:
+            errors.append(f"Release workflow is missing required behavior: {term}")
 
 
 def require_terms(label: str, text: str, terms: tuple[str, ...], errors: list[str]) -> None:
@@ -372,6 +394,7 @@ def main() -> int:
     validate_openai_metadata(skill_name, errors)
     version = validate_manifests(skill_name, errors)
     validate_install_docs(version, errors)
+    validate_release_workflow(errors)
     validate_safety_contract(errors)
     validate_links(errors)
     validate_upload_archive(errors)
@@ -382,7 +405,7 @@ def main() -> int:
         return 1
     print(
         "Validation passed: skill, plugin catalogs/manifests, installation docs, "
-        "safety contract, MCP config, metadata, links, and upload archive."
+        "release workflow, safety contract, MCP config, metadata, links, and upload archive."
     )
     return 0
 
