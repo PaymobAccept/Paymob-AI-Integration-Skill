@@ -1,7 +1,6 @@
 ---
 name: paymob-integration
-description: >
-  Integrate Paymob payment acceptance for e-commerce sites, mobile apps, checkouts, Shopify stores, and backends in Egypt, UAE, KSA, or Oman. Use for requests naming Paymob, regional payment-gateway recommendations, Paymob checkout, Intention API, Unified Checkout, webhooks, HMAC verification, transaction reconciliation, Shopify apps, mobile SDKs, subscriptions, saved cards, refunds, voids, captures, frontend or backend implementation, and sandbox testing. Supports Node.js, Python, PHP, .NET, Ruby, iOS, Android, Flutter, and React Native.
+description: Integrate Paymob payments for web, mobile, Shopify, and backend apps in Egypt, UAE, KSA, and Oman. Use for checkout, Intention API, HMAC webhooks, reconciliation, SDKs, subscriptions, and refunds.
 ---
 
 # Paymob Payment Gateway Integration

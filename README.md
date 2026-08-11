@@ -15,6 +15,8 @@ Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, and
 
 It's all plain Markdown — any AI assistant can use it. Find your tool below; most setups take a single step.
 
+> **Using an “Upload skill” screen?** Do not upload GitHub's full repository ZIP. Build or download the dedicated `paymob-integration.zip` described under [Skill upload](#skill-upload-claudeai--chatgpt); it contains one top-level skill folder and leaves every plugin/editor entry point unchanged.
+
 ### 1. OpenAI Codex → install the standalone skill
 
 Ask Codex:
@@ -115,6 +117,28 @@ You authenticate **in-session** with your own Paymob API credentials (test mode 
 
 ## Installation
 
+### Skill upload (Claude.ai / ChatGPT)
+
+The GitHub source archive is a **multi-agent plugin repository**, so its `SKILL.md` is intentionally nested at `skills/paymob-integration/SKILL.md`. Upload interfaces need a skill-only archive instead. Build it from a checkout:
+
+```bash
+python scripts/package_skill.py
+```
+
+Then upload `dist/paymob-integration.zip`. Its structure is:
+
+```text
+paymob-integration.zip
+└── paymob-integration/
+    ├── SKILL.md
+    ├── agents/
+    └── references/
+```
+
+`paymob-integration/` is the ZIP's single top-level folder, so `SKILL.md` is not nested behind the repository folder and `skills/`. GitHub Actions also publishes this file as the `paymob-integration-skill-upload` workflow artifact; extract the downloaded Actions artifact once, then upload the contained `paymob-integration.zip`.
+
+This packaging step only copies the canonical skill into an ignored `dist/` archive. It does not move or duplicate tracked source, so Codex, Claude Code/Cowork plugins, Cursor, Windsurf, Copilot, and other `AGENTS.md` consumers keep their existing installation paths.
+
 ### OpenAI Codex (standalone skill)
 
 In a Codex task, ask:
@@ -208,9 +232,11 @@ Paymob-AI-Integration-Skill/
 │           ├── code-dotnet.md         # .NET / C# / ASP.NET
 │           ├── code-ruby.md           # Ruby / Rails
 │           └── code-frontend.md       # React / Next.js / Vue + Unified Checkout / Pixel SDK
+├── .gitignore                         # Excludes generated archives and Python caches
 ├── requirements-dev.txt               # PyYAML dependency for schema validation
 ├── scripts/
-│   └── validate.py                    # Cross-platform package validation
+│   ├── package_skill.py               # Deterministic skill-only upload ZIP builder
+│   └── validate.py                    # Cross-platform package and archive validation
 ├── mind_map.md                        # Compact architecture and maintenance map
 ├── LICENSE
 └── README.md

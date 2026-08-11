@@ -6,9 +6,11 @@ from __future__ import annotations
 import json
 import re
 import sys
+import uuid
 from pathlib import Path
 
 import yaml
+from package_skill import archive_errors, build_archive
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = ROOT / "skills" / "paymob-integration"
@@ -89,9 +91,9 @@ def validate_skill(errors: list[str]) -> str:
         errors.append("Skill name exceeds 64 characters")
     if not isinstance(description, str) or not description.strip():
         errors.append("Skill description is missing or is not a string")
-    elif len(description.strip()) > 1024:
+    elif len(description.strip()) > 200:
         errors.append(
-            f"Skill description is {len(description.strip())} characters; maximum is 1024"
+            f"Skill description is {len(description.strip())} characters; maximum is 200"
         )
     elif "<" in description or ">" in description:
         errors.append("Skill description cannot contain angle brackets")
@@ -222,6 +224,9 @@ def validate_install_docs(version: str, errors: list[str]) -> None:
         "claude plugin install paymob-integration@paymob",
         "tree/main/skills/paymob-integration",
         "codex mcp add paymob --url https://mcp.paymob.com/mcp",
+        "python scripts/package_skill.py",
+        "dist/paymob-integration.zip",
+        "paymob-integration-skill-upload",
     )
     for command in required:
         if command not in readme:
@@ -340,6 +345,27 @@ def validate_links(errors: list[str]) -> None:
                 )
 
 
+def validate_upload_archive(errors: list[str]) -> None:
+    validation_dir = ROOT / "dist"
+    validation_dir.mkdir(exist_ok=True)
+    prefix = f".validation-{uuid.uuid4().hex}"
+    first = validation_dir / f"{prefix}-a.zip"
+    second = validation_dir / f"{prefix}-b.zip"
+    try:
+        build_archive(first)
+        build_archive(second)
+        errors.extend(
+            f"Standalone skill archive: {error}" for error in archive_errors(first)
+        )
+        if first.read_bytes() != second.read_bytes():
+            errors.append("Standalone skill archive must be deterministic")
+    except (OSError, ValueError) as exc:
+        errors.append(f"Standalone skill packaging failed: {exc}")
+    finally:
+        first.unlink(missing_ok=True)
+        second.unlink(missing_ok=True)
+
+
 def main() -> int:
     errors: list[str] = []
     skill_name = validate_skill(errors)
@@ -348,6 +374,7 @@ def main() -> int:
     validate_install_docs(version, errors)
     validate_safety_contract(errors)
     validate_links(errors)
+    validate_upload_archive(errors)
     if errors:
         print("Validation failed:")
         for error in errors:
@@ -355,7 +382,7 @@ def main() -> int:
         return 1
     print(
         "Validation passed: skill, plugin catalogs/manifests, installation docs, "
-        "safety contract, MCP config, metadata, and links."
+        "safety contract, MCP config, metadata, links, and upload archive."
     )
     return 0
 
