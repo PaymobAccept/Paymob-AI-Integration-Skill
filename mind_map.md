@@ -8,12 +8,14 @@ Portable, cross-agent Paymob integration guidance packaged as a Codex/ChatGPT pl
 - JSON plugin and MCP manifests
 - YAML Codex skill metadata
 - Python repository validation with PyYAML for host metadata schemas
-- GitHub Actions for validation
+- Deterministic Python ZIP packaging for upload-based skill hosts
+- GitHub Actions for validation and downloadable test artifacts
 
 # How To Run
 
 - Install validation dependency: `python -m pip install -r requirements-dev.txt`
 - Validate: `python scripts/validate.py`
+- Build the skill-upload ZIP: `python scripts/package_skill.py`
 - Validate the skill with Codex tooling: `python <skill-creator>/scripts/quick_validate.py skills/paymob-integration`
 - Validate the Codex plugin with Codex tooling: `python <plugin-creator>/scripts/validate_plugin.py .`
 
@@ -29,8 +31,9 @@ Portable, cross-agent Paymob integration guidance packaged as a Codex/ChatGPT pl
 - `AGENTS.md`: repository-level cross-agent router and safety rules
 - `universal-prompt.md`: self-contained prompt for assistants without skill support
 - `requirements-dev.txt`: validation-only PyYAML dependency
-- `scripts/validate.py`: package, marketplace, installation-doc, semantic-safety, YAML metadata, link, and manifest validation
-- `.github/workflows/validate.yml`: CI validation
+- `scripts/package_skill.py`: deterministic skill-only ZIP builder with one top-level `paymob-integration/` folder
+- `scripts/validate.py`: package, marketplace, installation-doc, semantic-safety, YAML metadata, link, manifest, and upload-archive validation
+- `.github/workflows/validate.yml`: CI validation plus the `paymob-integration-skill-upload` artifact
 
 # Main Entry Points
 
@@ -58,6 +61,7 @@ Host discovers manifest or skill -> skill routes by commerce platform -> merchan
 - Create payment: `POST {base_url}/v1/intention/`
 - Official MCP endpoint: `https://mcp.paymob.com/mcp`
 - Validation command: `python scripts/validate.py`
+- Upload-package command: `python scripts/package_skill.py`
 
 # Data Model / Storage
 
@@ -96,7 +100,8 @@ No application data store. Consumer applications should persist their own order 
 
 # Testing Map
 
-- `scripts/validate.py`: portable repository checks
+- `scripts/validate.py`: portable repository and generated-archive checks
+- `scripts/package_skill.py`: deterministic archive generation and structural verification
 - Codex `quick_validate.py`: skill schema and metadata validation
 - Codex `validate_plugin.py`: plugin manifest validation
 - Forward tests: representative integration, HMAC-debugging, and multi-agent audit prompts
@@ -107,10 +112,12 @@ No application data store. Consumer applications should persist their own order 
 - The MCP server can perform financial actions; each live write requires current, operation-specific confirmation, preflight state, duplicate protection, and result verification.
 - `universal-prompt.md`, `AGENTS.md`, and the canonical skill can drift if changes are not synchronized.
 - Direct standalone skill installation must target `skills/paymob-integration`, not the repository root.
+- Upload-based hosts must receive the generated `paymob-integration.zip`, not GitHub's full source archive.
 
 # Recent Changes Log
 
 - 2026-08-11: Added Codex plugin packaging, Codex skill metadata, Claude marketplace packaging, primary-agent safety rules, semantic validation automation, and corrected install guidance.
+- 2026-08-11: Added a deterministic upload-only skill ZIP, CI artifact publishing, and a 200-character cross-host skill description while preserving all plugin and editor entry points.
 
 # AI Agent Notes
 
