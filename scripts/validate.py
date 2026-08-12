@@ -229,6 +229,11 @@ def validate_install_docs(version: str, errors: list[str]) -> None:
         "dist/paymob-integration.zip",
         "paymob-integration-skill-upload",
         "releases/latest/download/paymob-integration.zip",
+        "docs.lovable.dev/features/skills",
+        "https://lovable.dev/favicon.ico",
+        "Settings → Skills",
+        "choose the **ZIP** tab",
+        "/paymob-integration",
     )
     for command in required:
         if command not in readme:
