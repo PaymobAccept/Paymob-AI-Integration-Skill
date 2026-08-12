@@ -4,7 +4,7 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
-<a href="https://docs.lovable.dev/features/skills"><img src="https://lovable.dev/favicon.ico" alt="Lovable" width="16" height="16"> Lovable Skills tested</a>
+<img src="https://lovable.dev/favicon.ico" alt="Lovable" width="16" height="16"> Lovable</a>
 
 **Claude.ai / ChatGPT / Lovable skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
 
