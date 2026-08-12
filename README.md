@@ -2,14 +2,15 @@
 
 ![version](https://img.shields.io/badge/version-3.2.1-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
-![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
+![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
+<a href="https://docs.lovable.dev/features/skills"><img src="https://lovable.dev/favicon.ico" alt="Lovable" width="16" height="16"> Lovable Skills tested</a>
 
-**Claude.ai / ChatGPT skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
+**Claude.ai / ChatGPT / Lovable skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
 
 Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](https://paymob.com) payment gateway across **Egypt, UAE, KSA, and Oman**. The agent routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments — on any tech stack.
 
-Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
+Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, a tested **Lovable workspace skill**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
 
 ---
 
@@ -17,7 +18,7 @@ Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, and
 
 It's all plain Markdown — any AI assistant can use it. Find your tool below; most setups take a single step.
 
-> **Using an “Upload skill” screen?** Do not upload GitHub's full repository ZIP. Build or download the dedicated `paymob-integration.zip` described under [Skill upload](#skill-upload-claudeai--chatgpt); it contains one top-level skill folder and leaves every plugin/editor entry point unchanged.
+> **Using an “Upload skill” screen?** Do not upload GitHub's full repository ZIP. Build or download the dedicated `paymob-integration.zip` described under [Skill upload](#skill-upload-claudeai--chatgpt--lovable); it contains one top-level skill folder and leaves every plugin/editor entry point unchanged.
 
 ### 1. OpenAI Codex → install the standalone skill
 
@@ -29,7 +30,19 @@ Use $skill-installer to install https://github.com/PaymobAccept/Paymob-AI-Integr
 
 Targeting the `skills/paymob-integration` subdirectory is required; the repository root is a multi-agent plugin package, not a standalone skill directory. The standalone skill includes all references. Add the optional live Paymob server separately with `codex mcp add paymob --url https://mcp.paymob.com/mcp`.
 
-### 2. Coding agents → drop in `AGENTS.md` (easiest, recommended)
+### 2. Lovable → import the tested workspace skill
+
+<a href="https://docs.lovable.dev/features/skills"><img src="https://lovable.dev/favicon.ico" alt="Lovable" width="18" height="18"></a> **Tested successfully with Lovable Workspace Skills.**
+
+1. [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip). Keep the file zipped.
+2. In your Lovable workspace, open **Settings → Skills**.
+3. Click **Import**, choose the **ZIP** tab, and upload `paymob-integration.zip`.
+4. Open **Paymob Integration** and leave **Automatic use** enabled, or invoke it explicitly from chat with `/paymob-integration`.
+5. The skill is shared with every project in the workspace. To disable it for one project only, use **Project settings → Skills**.
+
+You need a workspace owner, admin, or editor role to import a custom skill. Although Lovable also supports public GitHub imports, use the release ZIP for this repository: Lovable accepts `SKILL.md` only at the repository root or inside one wrapping folder, while this multi-agent plugin intentionally keeps it at `skills/paymob-integration/SKILL.md`.
+
+### 3. Coding agents → drop in `AGENTS.md` (easiest, recommended)
 
 [`AGENTS.md`](https://agents.md) is an open standard that coding agents read **automatically** from your project's root folder. Natively supported by **OpenAI Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Zed, Jules, Devin, Factory, Amp, RooCode, Warp, JetBrains Junie**, and more.
 
@@ -43,13 +56,13 @@ curl -O https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Ski
 - Already have an `AGENTS.md`? Just paste this one's contents into it under a `## Paymob` heading.
 - Now ask your agent in plain English — *"Add Paymob card payments to my checkout"* — and it follows the Paymob rules automatically.
 
-### 3. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
+### 4. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
 
 1. Open [`universal-prompt.md`](universal-prompt.md) and **copy the whole file**.
 2. Paste it into the assistant's **system prompt** / **custom instructions** (ChatGPT: *Settings → Personalization → Custom instructions*; Gemini: a *Gem*; Claude.ai: a *Project*'s instructions).
 3. Describe what you're building. It's fully self-contained — no other files needed.
 
-### 4. Prefer a pinned editor rules file? (optional)
+### 5. Prefer a pinned editor rules file? (optional)
 
 If you'd rather use your editor's native rules file instead of `AGENTS.md`, save [`universal-prompt.md`](universal-prompt.md) as:
 
@@ -60,7 +73,7 @@ If you'd rather use your editor's native rules file instead of `AGENTS.md`, save
 | GitHub Copilot | `.github/copilot-instructions.md` |
 | Cline · Continue · Roo | the tool's rules / context file |
 
-### 5. Claude Code / Cowork → install the full plugin
+### 6. Claude Code / Cowork → install the full plugin
 
 Add this repository as a marketplace, then install the plugin. The plugin auto-registers the bundled live Paymob MCP server (see [below](#live-access--paymob-mcp-server)):
 
@@ -119,7 +132,7 @@ You authenticate **in-session** with your own Paymob API credentials (test mode 
 
 ## Installation
 
-### Skill upload (Claude.ai / ChatGPT)
+### Skill upload (Claude.ai / ChatGPT / Lovable)
 
 **Recommended:** download the permanent release asset and upload it directly—do not extract it:
 
