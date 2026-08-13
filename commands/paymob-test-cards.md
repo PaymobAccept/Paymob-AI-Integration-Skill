@@ -1,5 +1,5 @@
 ---
-description: Show Paymob sandbox test cards, wallet, and kiosk credentials, optionally filtered by payment method.
+description: Show Paymob sandbox test card and wallet credentials, optionally filtered by payment method.
 argument-hint: "[card|wallet|kiosk]"
 allowed-tools: Read
 ---
@@ -9,7 +9,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/references/test-credential
 Argument handling for `$ARGUMENTS`:
 - `card` → show only the Mastercard and Visa test card sections.
 - `wallet` → show only the test mobile wallet section.
-- `kiosk` → this reference file does not currently list kiosk sandbox credentials. Say so explicitly, then point the user to `references/live-resources.md` (the `llms.txt` doc index and developer docs) or `support@paymob.com` to get current kiosk sandbox details — do not invent kiosk numbers.
+- `kiosk`, or any other method the file has no section for (BNPL, Apple/Google Pay, bank installments) → say plainly that this reference file lists credentials for cards and wallets only, and that it has no entry for the requested method. Then point the user to `references/live-resources.md` (the `llms.txt` doc index and developer docs) or `support@paymob.com` for that method's sandbox details. **Do not invent numbers, and do not substitute a card number as a stand-in.** Do not assert how the method's sandbox flow works either — if it isn't in the reference file, it isn't established here.
 - No argument → show all sections the file contains (cards and wallet).
 
 Always carry over, verbatim in meaning, these two caveats from the source file regardless of which filter was used:
