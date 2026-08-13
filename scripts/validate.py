@@ -64,6 +64,22 @@ COMMAND_SECRET_PATTERN = re.compile(
 HMAC_FIELD_ORDER_RESTATEMENT_PATTERN = re.compile(
     r"amount_cents\s*\r?\n\s*created_at\s*\r?\n\s*currency"
 )
+# ${CLAUDE_PLUGIN_ROOT} is substituted only for plugin installs. A command that
+# names it as the sole location breaks when the skill is installed as a personal
+# skill under ~/.claude/skills/, which is what agents do when asked to install
+# the skill from GitHub. Every command must offer a non-plugin fallback.
+COMMAND_FALLBACK_PATH_PATTERNS = (
+    re.compile(r"~/\.claude/skills/paymob-integration"),
+    re.compile(r"(?<!/)\bskills/paymob-integration"),
+)
+# A command that cannot read its reference file must stop rather than answer
+# from the model's own recall; for the HMAC audit that failure mode is a wrong
+# field order presented as verified.
+COMMAND_FAIL_CLOSED_PATTERN = re.compile(
+    r"(cannot read|can't read).{0,80}(say so and stop|stop)"
+    r"|(say so and stop).{0,120}(from memory|from recall)",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def load_json(path: Path, errors: list[str]) -> dict:
@@ -487,6 +503,20 @@ def validate_commands(errors: list[str]) -> None:
 
         if COMMAND_SECRET_PATTERN.search(body):
             errors.append(f"{label} appears to contain a hardcoded secret or key")
+
+        if "${CLAUDE_PLUGIN_ROOT}" in body and not any(
+            pattern.search(body) for pattern in COMMAND_FALLBACK_PATH_PATTERNS
+        ):
+            errors.append(
+                f"{label} names ${{CLAUDE_PLUGIN_ROOT}} without a non-plugin fallback "
+                "path; the reference files are unreachable in a personal-skill install"
+            )
+
+        if not COMMAND_FAIL_CLOSED_PATTERN.search(body):
+            errors.append(
+                f"{label} must tell the agent to stop rather than answer from memory "
+                "when it cannot read its reference file"
+            )
 
 
 def validate_links(errors: list[str]) -> None:
