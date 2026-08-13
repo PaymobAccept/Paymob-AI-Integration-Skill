@@ -9,8 +9,8 @@ The user wants this Paymob error explained: $ARGUMENTS
 **Locating the skill files.** `SKILL.md` and its `references/` directory live together. Use the first of these that exists:
 
 1. `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/` — plugin install
-2. `~/.claude/skills/paymob-integration/` — personal skill install
-3. `skills/paymob-integration/` — repository checkout
+2. `~/.claude/skills/paymob-integration/` — personal skill install. `~` is the user's home directory; on Windows expand it yourself (`%USERPROFILE%\.claude\skills\…`), since a literal `~` will not resolve there.
+3. `skills/paymob-integration/` — repository checkout, relative to the working directory
 
 `${CLAUDE_PLUGIN_ROOT}` is substituted only for plugin installs. If you see it unexpanded, you are not in one — use path 2 or 3. If none resolve, search for `SKILL.md` under any `paymob-integration` directory. Paths written as `references/…` below are relative to whichever root you resolved.
 

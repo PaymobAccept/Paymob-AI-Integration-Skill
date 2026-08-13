@@ -9,8 +9,8 @@ Read `references/test-credentials.md` in full and present the sandbox test crede
 **Locating the reference file.** Use the first of these that exists:
 
 1. `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/references/` — plugin install
-2. `~/.claude/skills/paymob-integration/references/` — personal skill install
-3. `skills/paymob-integration/references/` — repository checkout
+2. `~/.claude/skills/paymob-integration/references/` — personal skill install. `~` is the user's home directory; on Windows expand it yourself (`%USERPROFILE%\.claude\skills\…`), since a literal `~` will not resolve there.
+3. `skills/paymob-integration/references/` — repository checkout, relative to the working directory
 
 `${CLAUDE_PLUGIN_ROOT}` is substituted only for plugin installs. If you see it unexpanded, you are not in one — use path 2 or 3. If none resolve, search for `test-credentials.md` under any `paymob-integration` directory.
 

@@ -18,8 +18,8 @@ Audit the user's Paymob webhook HMAC verification code: $ARGUMENTS
 `hmac-verification.md` lives in the skill's `references/` directory. Use the first of these that exists:
 
 1. `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/references/` — plugin install
-2. `~/.claude/skills/paymob-integration/references/` — personal skill install
-3. `skills/paymob-integration/references/` — repository checkout
+2. `~/.claude/skills/paymob-integration/references/` — personal skill install. `~` is the user's home directory; on Windows expand it yourself (`%USERPROFILE%\.claude\skills\…`), since a literal `~` will not resolve there.
+3. `skills/paymob-integration/references/` — repository checkout, relative to the working directory. This only resolves if the user happens to be working inside the skill repo, so treat path 2 as the reliable one for a personal install.
 
 `${CLAUDE_PLUGIN_ROOT}` is substituted only for plugin installs. If you see it unexpanded, you are not in one — use path 2 or 3. If none resolve, search for `hmac-verification.md` under any `paymob-integration` directory. Confirm you have actually read the file before starting Step 2.
 
