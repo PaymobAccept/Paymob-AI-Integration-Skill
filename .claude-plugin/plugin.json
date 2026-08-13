@@ -7,10 +7,7 @@
     "email": "mohamedragab@paymob.com"
   },
   "homepage": "https://github.com/PaymobAccept/Paymob-AI-Integration-Skill",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/PaymobAccept/Paymob-AI-Integration-Skill.git"
-  },
+  "repository": "https://github.com/PaymobAccept/Paymob-AI-Integration-Skill",
   "license": "MIT",
   "keywords": [
     "paymob",
