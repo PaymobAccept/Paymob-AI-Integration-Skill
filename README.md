@@ -12,6 +12,8 @@ Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](h
 
 Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, a tested **Lovable workspace skill**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
 
+> **This repository is the distribution channel.** Paymob has no listing yet in Anthropic's plugin directory, OpenAI's, or Lovable's marketplace, and the Paymob MCP server is not in any vendor connector registry. If you search a vendor marketplace for "Paymob" and find nothing, that's expected — not a mistake on your end. Every method below installs straight from this repo (or its release ZIP) and works today; the Claude Code path registers this repo as a *custom* marketplace, which needs no vendor listing. Vendor listings are something we hope to add later.
+
 ---
 
 ## Works with any AI agent
