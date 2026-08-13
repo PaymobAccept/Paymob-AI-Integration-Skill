@@ -36,6 +36,15 @@ Use these **only** with Test-mode keys and Test-mode Integration IDs. Never use 
 - MPIN code: `123456`
 - OTP: `123456`
 
+## Methods with no sandbox test path
+
+⚠️ **Kiosk (Aman, Masary) cannot be tested in sandbox.** Paymob's sandbox does not support kiosk transactions, so no kiosk test credentials exist and a kiosk payment cannot be completed end-to-end in Test mode. (Confirmed with Paymob, August 2026.)
+
+- Do **not** substitute a test card for kiosk and record the method as validated — that exercises the card rail, not the kiosk rail.
+- If the merchant is enabling kiosk, tell them **before** they plan go-live, not after. Cards and wallets validate in sandbox as normal, but kiosk verification has to be arranged with their Paymob account manager or `support@paymob.com`. Don't let a merchant treat a green sandbox run as covering a method that sandbox never touched.
+
+This file also has no entries for BNPL, Apple Pay, Google Pay, or bank installments. Don't assume they behave like cards, and don't infer a sandbox path for them from the card/wallet sections above — confirm with `support@paymob.com` for the specific method the merchant is enabling.
+
 ## Using them
 
 1. Make sure the Integration ID used in the Intention request is the **Test** version of the relevant payment method (Cards or Wallets), and that the Secret Key used is also Test mode — mismatched modes cause a 404 on intention creation (see `intention-api.md`).
