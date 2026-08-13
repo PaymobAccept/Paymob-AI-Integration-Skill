@@ -216,6 +216,22 @@ def validate_manifests(skill_name: str, errors: list[str]) -> str:
     if codex.get("version") != claude.get("version"):
         errors.append("Codex and Claude plugin versions must match")
 
+    # Claude Code rejects the whole plugin when a manifest field has the wrong
+    # type, so the plugin becomes uninstallable. `repository` as an npm-style
+    # {type, url} object is the easy mistake: it is valid package.json and
+    # invalid here. Checking presence alone never caught it.
+    for field in ("name", "version", "description", "homepage", "repository", "license"):
+        value = claude.get(field)
+        if value is not None and not isinstance(value, str):
+            errors.append(
+                f"Claude manifest {field!r} must be a string, not "
+                f"{type(value).__name__}; a wrong type makes the plugin uninstallable"
+            )
+    if claude.get("author") is not None and not isinstance(claude.get("author"), dict):
+        errors.append("Claude manifest 'author' must be an object")
+    if claude.get("keywords") is not None and not isinstance(claude.get("keywords"), list):
+        errors.append("Claude manifest 'keywords' must be an array")
+
     for manifest_name, manifest in (("Codex", codex), ("Claude", claude)):
         for field in ("skills", "mcpServers"):
             value = manifest.get(field)
