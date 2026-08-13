@@ -1,5 +1,6 @@
 {
   "name": "paymob",
+  "description": "Paymob's official marketplace for AI agent integration tooling — build and verify secure Paymob payment flows across Egypt, UAE, KSA, and Oman.",
   "owner": {
     "name": "Paymob",
     "email": "mohamedragab@paymob.com",

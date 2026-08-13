@@ -256,6 +256,11 @@ def validate_manifests(skill_name: str, errors: list[str]) -> str:
 
     if marketplace.get("name") != "paymob":
         errors.append("Claude marketplace name must be 'paymob'")
+    # `claude plugin validate --strict` treats a missing marketplace description
+    # as an error, and directory listings surface it.
+    marketplace_description = marketplace.get("description")
+    if not isinstance(marketplace_description, str) or not marketplace_description.strip():
+        errors.append("Claude marketplace must declare a non-empty description")
     if not isinstance(marketplace.get("owner"), dict):
         errors.append("Claude marketplace must declare an owner object")
     plugins = marketplace.get("plugins")
