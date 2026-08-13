@@ -2,6 +2,7 @@
 description: Audit a Paymob webhook HMAC verification implementation for correctness and safe failure behavior.
 argument-hint: "[path to the webhook handler, optional]"
 disable-model-invocation: true
+allowed-tools: Read Glob Grep
 ---
 
 Audit the user's Paymob webhook HMAC verification code: $ARGUMENTS
@@ -10,14 +11,25 @@ Audit the user's Paymob webhook HMAC verification code: $ARGUMENTS
 - Never ask the user to paste their HMAC secret, API key, or Secret Key into this conversation.
 - Never read a `.env` file's actual secret value, and never echo, print, or write any secret into chat output, logs, or a file you create.
 - The default mode is a **static code audit** — no computation is required to complete it.
+- **Never audit the field order, digest, or callback shape from memory.** This command deliberately carries no copy of the spec. If you cannot read `hmac-verification.md`, you cannot do this audit — say so and stop. An audit performed from recall can pass a wrong field order as correct, which is the exact failure this command exists to catch: HMAC verification that looks verified and silently is not.
+
+## Step 0 — locate the spec
+
+`hmac-verification.md` lives in the skill's `references/` directory. Use the first of these that exists:
+
+1. `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/references/` — plugin install
+2. `~/.claude/skills/paymob-integration/references/` — personal skill install
+3. `skills/paymob-integration/references/` — repository checkout
+
+`${CLAUDE_PLUGIN_ROOT}` is substituted only for plugin installs. If you see it unexpanded, you are not in one — use path 2 or 3. If none resolve, search for `hmac-verification.md` under any `paymob-integration` directory. Confirm you have actually read the file before starting Step 2.
 
 ## Step 1 — locate the code
 
 If `$ARGUMENTS` names a path, start there. Otherwise search for the callback route bound to `notification_url` / the `hmac` query parameter, or for `PAYMOB_HMAC_SECRET` usage.
 
-## Step 2 — audit against `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/references/hmac-verification.md`
+## Step 2 — audit against `references/hmac-verification.md`
 
-Read that file first — don't rely on memory for the field order or algorithm, since this command carries no copy of the spec. Then check each item below and report pass/fail with file/line references:
+Read that file first, from the root you resolved in Step 0 — don't rely on memory for the field order or algorithm. Then check each item below and report pass/fail with file/line references:
 
 1. **Digest**: HMAC-**SHA-512**, not SHA-256 or any other digest.
 2. **Source and order**: the concatenation reads fields from `body.obj` (the POST payload) in exactly the field order given in `hmac-verification.md` — flag any other ordering, including "alphabetical by key name," as a failure.

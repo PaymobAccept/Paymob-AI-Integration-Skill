@@ -1,12 +1,22 @@
 ---
 description: Explain a Paymob error code, HTTP status, or error message and give the cause and fix.
 argument-hint: "[error code, HTTP status, or error message]"
-allowed-tools: Read
+allowed-tools: Read Glob
 ---
 
 The user wants this Paymob error explained: $ARGUMENTS
 
-1. Read the **Troubleshooting** table in `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/SKILL.md` and match `$ARGUMENTS` against its rows (by HTTP status, error text, or symptom). Quote the cause(s) listed for the matching row — do not paraphrase from memory, read the table each time in case it has changed.
+**Locating the skill files.** `SKILL.md` and its `references/` directory live together. Use the first of these that exists:
+
+1. `${CLAUDE_PLUGIN_ROOT}/skills/paymob-integration/` — plugin install
+2. `~/.claude/skills/paymob-integration/` — personal skill install
+3. `skills/paymob-integration/` — repository checkout
+
+`${CLAUDE_PLUGIN_ROOT}` is substituted only for plugin installs. If you see it unexpanded, you are not in one — use path 2 or 3. If none resolve, search for `SKILL.md` under any `paymob-integration` directory. Paths written as `references/…` below are relative to whichever root you resolved.
+
+**If you cannot read the files, say so and stop.** Do not explain a Paymob error from memory — a plausible-sounding wrong cause sends the merchant to debug the wrong layer.
+
+1. Read the **Troubleshooting** table in `SKILL.md` and match `$ARGUMENTS` against its rows (by HTTP status, error text, or symptom). Quote the cause(s) listed for the matching row — do not paraphrase from memory, read the table each time in case it has changed.
 2. If the fix involves code, open the reference file matching the user's project language/framework — `references/code-nodejs.md`, `references/code-python.md`, `references/code-php.md`, `references/code-dotnet.md`, `references/code-ruby.md`, or `references/code-frontend.md` — and adapt its corrected snippet to the user's project. Do not write a fix that contradicts what's in that file (for example, don't invent a different HMAC digest, header scheme, or amount unit than what the reference shows).
 3. If the matching row is the HMAC-mismatch row, also read `references/hmac-verification.md` before answering and get the field order, digest algorithm, and the `obj.id`/`order.id` (POST) vs `id`/`order_id` (GET redirect) distinction from that file directly — never restate the field order from memory or from this command file, since this file intentionally carries no copy of it.
 4. If `$ARGUMENTS` does not match any row in the table, say so explicitly rather than guessing at a cause. Then:
