@@ -1,6 +1,6 @@
 {
   "name": "paymob-integration",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Integrate and verify Paymob payments across Egypt, UAE, KSA, and Oman with secure checkout, webhooks, reconciliation, and optional live account tools.",
   "author": {
     "name": "Paymob Support",

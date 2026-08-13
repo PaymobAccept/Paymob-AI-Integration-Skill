@@ -27,8 +27,43 @@ UNIVERSAL_PROMPT = ROOT / "universal-prompt.md"
 MCP_REFERENCE = SKILL_DIR / "references" / "mcp-server.md"
 HMAC_REFERENCE = SKILL_DIR / "references" / "hmac-verification.md"
 ADVANCED_REFERENCE = SKILL_DIR / "references" / "advanced-features.md"
+COMMANDS_DIR = ROOT / "commands"
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 LOCAL_LINK_PATTERN = re.compile(r"\]\((?!https?://|mailto:|#)([^)#]+)(?:#[^)]+)?\)")
+PLUGIN_ROOT_REFERENCE_PATTERN = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/([^\s`\"')]+)")
+ALLOWED_COMMAND_FRONTMATTER_KEYS = {
+    "name",
+    "description",
+    "when_to_use",
+    "argument-hint",
+    "arguments",
+    "disable-model-invocation",
+    "user-invocable",
+    "allowed-tools",
+    "disallowed-tools",
+    "model",
+    "effort",
+    "context",
+    "agent",
+    "background",
+    "hooks",
+    "paths",
+    "shell",
+    "metadata",
+    "license",
+    "compatibility",
+}
+# Matches a hardcoded Paymob key/secret literal, as opposed to an env var name
+# or a doc reference — command files must only ever read secrets at runtime.
+COMMAND_SECRET_PATTERN = re.compile(
+    r"\b(sk|pk)_(live|test)_[A-Za-z0-9]{10,}\b"
+    r"|PAYMOB_(?:HMAC_SECRET|SECRET_KEY|API_KEY)\s*[=:]\s*['\"][^'\"\s]{6,}['\"]"
+)
+# The literal field-order list from hmac-verification.md; a command file that
+# reproduces it has drifted from the single-source-of-truth rule.
+HMAC_FIELD_ORDER_RESTATEMENT_PATTERN = re.compile(
+    r"amount_cents\s*\r?\n\s*created_at\s*\r?\n\s*currency"
+)
 
 
 def load_json(path: Path, errors: list[str]) -> dict:
@@ -358,6 +393,86 @@ def validate_safety_contract(errors: list[str]) -> None:
         errors.append("Transaction Inquiry must not use the Secret Key authorization header")
 
 
+def validate_commands(errors: list[str]) -> None:
+    if not COMMANDS_DIR.is_dir():
+        errors.append("Missing commands/ directory")
+        return
+    command_files = sorted(COMMANDS_DIR.glob("*.md"))
+    if not command_files:
+        errors.append("commands/ directory has no command files")
+        return
+
+    for path in command_files:
+        label = str(path.relative_to(ROOT))
+        raw = path.read_bytes()
+        if raw.startswith(b"\xef\xbb\xbf"):
+            errors.append(f"{label} must be UTF-8 without a byte-order marker")
+            continue
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            errors.append(f"{label} is not valid UTF-8: {exc}")
+            continue
+
+        if not NAME_PATTERN.fullmatch(path.stem):
+            errors.append(f"{label} filename must be lowercase kebab-case")
+
+        match = re.match(r"^---\r?\n(?P<header>.*?)\r?\n---\r?\n", text, re.DOTALL)
+        if not match:
+            errors.append(f"{label} must start with closed YAML frontmatter")
+            continue
+        try:
+            frontmatter = yaml.safe_load(match.group("header"))
+        except yaml.YAMLError as exc:
+            errors.append(f"{label} frontmatter is invalid YAML: {exc}")
+            continue
+        if not isinstance(frontmatter, dict):
+            errors.append(f"{label} frontmatter must be a YAML object")
+            continue
+
+        unexpected = sorted(set(frontmatter) - ALLOWED_COMMAND_FRONTMATTER_KEYS)
+        if unexpected:
+            errors.append(f"{label} has unsupported frontmatter keys: {', '.join(unexpected)}")
+
+        description = frontmatter.get("description", "")
+        if not isinstance(description, str) or not description.strip():
+            errors.append(f"{label} description is missing or is not a string")
+        elif len(description.strip()) > 200:
+            errors.append(
+                f"{label} description is {len(description.strip())} characters; maximum is 200"
+            )
+        elif "<" in description or ">" in description:
+            errors.append(f"{label} description cannot contain angle brackets")
+
+        if "disable-model-invocation" in frontmatter and not isinstance(
+            frontmatter["disable-model-invocation"], bool
+        ):
+            errors.append(f"{label} disable-model-invocation must be a boolean")
+
+        if "argument-hint" in frontmatter and not isinstance(
+            frontmatter["argument-hint"], str
+        ):
+            errors.append(f"{label} argument-hint must be a string")
+
+        body = text[match.end():]
+        if not body.strip():
+            errors.append(f"{label} has no body content")
+            continue
+
+        for relative in PLUGIN_ROOT_REFERENCE_PATTERN.findall(body):
+            if not (ROOT / relative).exists():
+                errors.append(f"{label} references a missing file: {relative}")
+
+        if HMAC_FIELD_ORDER_RESTATEMENT_PATTERN.search(body):
+            errors.append(
+                f"{label} restates the HMAC field order instead of referencing "
+                "references/hmac-verification.md"
+            )
+
+        if COMMAND_SECRET_PATTERN.search(body):
+            errors.append(f"{label} appears to contain a hardcoded secret or key")
+
+
 def validate_links(errors: list[str]) -> None:
     for markdown in ROOT.rglob("*.md"):
         if ".git" in markdown.parts:
@@ -401,6 +516,7 @@ def main() -> int:
     validate_install_docs(version, errors)
     validate_release_workflow(errors)
     validate_safety_contract(errors)
+    validate_commands(errors)
     validate_links(errors)
     validate_upload_archive(errors)
     if errors:
@@ -410,7 +526,8 @@ def main() -> int:
         return 1
     print(
         "Validation passed: skill, plugin catalogs/manifests, installation docs, "
-        "release workflow, safety contract, MCP config, metadata, links, and upload archive."
+        "release workflow, safety contract, Claude commands, MCP config, metadata, "
+        "links, and upload archive."
     )
     return 0
 

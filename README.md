@@ -1,6 +1,6 @@
 # Paymob Integration Skill for AI Agents
 
-![version](https://img.shields.io/badge/version-3.2.1-blue)
+![version](https://img.shields.io/badge/version-3.3.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
@@ -102,6 +102,7 @@ When you ask the agent for help integrating Paymob, it provides:
 - **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
 - **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard, and community forum so the agent can confirm anything that may have changed.
 - **Safe multi-agent execution** — separates codebase mapping, live-doc verification, and security review while keeping file edits and all live payment actions serialized through one primary agent.
+- **Slash commands** (Claude Code / Cowork) — `/paymob-test-cards`, `/paymob-explain-error`, and `/paymob-check-hmac` for direct access to sandbox credentials, error lookups, and a webhook HMAC audit. See [Commands](#commands-claude-code--cowork).
 
 ---
 
@@ -127,6 +128,27 @@ claude mcp add --transport http paymob https://mcp.paymob.com/mcp
 ```
 
 You authenticate **in-session** with your own Paymob API credentials (test mode first — it includes money-movement tools). It complements, but does **not** replace, the HMAC-verified webhook as the source of truth. Full setup, the tool catalog, and security notes: [`references/mcp-server.md`](skills/paymob-integration/references/mcp-server.md).
+
+---
+
+## Commands (Claude Code / Cowork)
+
+Once the plugin is installed, these slash commands give direct access to the most common lookups without asking the agent to find the right reference file on its own. Each command reads from the same reference files the skill itself uses — there is no separate copy of the test cards, error table, or HMAC spec to drift out of sync.
+
+| Command | What it does |
+|---|---|
+| `/paymob-test-cards [card\|wallet\|kiosk]` | Prints sandbox test cards, wallet numbers, and OTPs from `references/test-credentials.md`, optionally filtered to one method. Always notes the 30-day sandbox expiry and that decline/error simulation isn't officially documented. |
+| `/paymob-explain-error <code, status, or message>` | Looks up a Paymob error against the Troubleshooting table in `SKILL.md`, explains the cause, and — for code fixes — pulls the corrected snippet from the matching `references/code-*.md` file for your stack. Falls back to `references/live-resources.md` for anything not in the table instead of guessing. |
+| `/paymob-check-hmac [path]` | Statically audits your webhook HMAC verification against `references/hmac-verification.md`: SHA-512 (not SHA-256), exact field order, `body.obj` sourcing, no `obj.id`/`obj.order.id` mix-up, fail-closed behavior, and unique-constraint-backed idempotency. Never asks you to paste your HMAC secret or API key; only invoked manually, never automatically. |
+
+**Examples:**
+
+```text
+/paymob-test-cards wallet
+/paymob-explain-error 401 on intention create
+/paymob-explain-error HMAC mismatch
+/paymob-check-hmac src/webhooks/paymob.ts
+```
 
 ---
 
@@ -241,10 +263,14 @@ Paymob-AI-Integration-Skill/
 ├── universal-prompt.md                # Portable prompt (Cursor, Windsurf, Copilot, ChatGPT, Gemini, …)
 ├── .mcp.json                          # Bundled Paymob MCP server (auto-registers when the plugin is enabled)
 ├── .codex-plugin/
-│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.2.1)
+│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.3.0)
 ├── .claude-plugin/
-│   ├── plugin.json                    # Claude Code plugin manifest (v3.2.1)
+│   ├── plugin.json                    # Claude Code plugin manifest (v3.3.0)
 │   └── marketplace.json               # Claude custom marketplace catalog
+├── commands/                          # Claude Code slash commands (additive, Claude-only)
+│   ├── paymob-test-cards.md           # /paymob-test-cards — sandbox test cards/wallets
+│   ├── paymob-explain-error.md        # /paymob-explain-error — error code → cause + fix
+│   └── paymob-check-hmac.md           # /paymob-check-hmac — static HMAC verification audit
 ├── skills/
 │   └── paymob-integration/
 │       ├── SKILL.md                   # Workflow backbone + multi-agent safety
@@ -271,7 +297,6 @@ Paymob-AI-Integration-Skill/
 ├── scripts/
 │   ├── package_skill.py               # Deterministic skill-only upload ZIP builder
 │   └── validate.py                    # Cross-platform package and archive validation
-├── mind_map.md                        # Compact architecture and maintenance map
 ├── LICENSE
 └── README.md
 ```
