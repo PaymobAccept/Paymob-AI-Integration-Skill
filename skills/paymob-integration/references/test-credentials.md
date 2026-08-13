@@ -45,8 +45,8 @@ Use these **only** with Test-mode keys and Test-mode Integration IDs. Never use 
 
 What that means in practice:
 
-- Do **not** substitute a test card for one of these methods and record it as validated — that exercises the card rail, not theirs.
-- **A green sandbox run does not cover them.** If the merchant is enabling kiosk or BNPL, tell them *before* they plan go-live, not after: cards and wallets validate in sandbox as normal, but these have to be verified with their Paymob account manager or `support@paymob.com`. The Phase 3 exit criteria in `SKILL.md` ("only flip to Live after a full successful test run") is not achievable for these methods, so don't present a passing sandbox suite as clearing them.
+- **This is not a launch blocker.** Every method goes through the same Intention API, Unified Checkout, and callback + HMAC verification, so a passing card test already validates effectively all of the merchant's own integration code. The merchant enables kiosk/BNPL in the Dashboard and goes live — see Phase 3 step 7 in `SKILL.md`.
+- Do **not** substitute a test card for one of these methods and then report the method itself as tested. The shared integration path is verified; the method-specific parts are not, and Phase 3 step 7 lists the four to check on the first real transaction (Integration ID, callback field shape, kiosk's asynchronous settlement, and refund support).
 
 **Not confirmed either way — don't assume:** Apple Pay, Google Pay, and bank installments. (`README.md` notes bank installments are "Live IDs only," which points the same way, but confirm with `support@paymob.com` before telling a merchant whether they can test it.) Don't infer a sandbox path for any of these from the card/wallet sections above.
 
