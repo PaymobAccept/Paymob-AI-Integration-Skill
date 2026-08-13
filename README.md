@@ -137,7 +137,7 @@ Once the plugin is installed, these slash commands give direct access to the mos
 
 | Command | What it does |
 |---|---|
-| `/paymob-test-cards [card\|wallet\|kiosk]` | Prints sandbox test cards, wallet numbers, and OTPs from `references/test-credentials.md`, optionally filtered to one method. Always notes the 30-day sandbox expiry and that decline/error simulation isn't officially documented. |
+| `/paymob-test-cards [card\|wallet\|kiosk\|bnpl]` | Prints sandbox test cards, wallet numbers, and OTPs from `references/test-credentials.md`, optionally filtered to one method. Always notes the 30-day sandbox expiry and that decline/error simulation isn't officially documented. For kiosk and BNPL it reports that sandbox can't test them at all, rather than offering a card as a stand-in. |
 | `/paymob-explain-error <code, status, or message>` | Looks up a Paymob error against the Troubleshooting table in `SKILL.md`, explains the cause, and — for code fixes — pulls the corrected snippet from the matching `references/code-*.md` file for your stack. Falls back to `references/live-resources.md` for anything not in the table instead of guessing. |
 | `/paymob-check-hmac [path]` | Statically audits your webhook HMAC verification against `references/hmac-verification.md`: SHA-512 (not SHA-256), exact field order, `body.obj` sourcing, no `obj.id`/`obj.order.id` mix-up, fail-closed behavior, and unique-constraint-backed idempotency. Never asks you to paste your HMAC secret or API key; only invoked manually, never automatically. |
 

@@ -38,12 +38,17 @@ Use these **only** with Test-mode keys and Test-mode Integration IDs. Never use 
 
 ## Methods with no sandbox test path
 
-⚠️ **Kiosk (Aman, Masary) cannot be tested in sandbox.** Paymob's sandbox does not support kiosk transactions, so no kiosk test credentials exist and a kiosk payment cannot be completed end-to-end in Test mode. (Confirmed with Paymob, August 2026.)
+⚠️ **These methods cannot be tested in sandbox at all.** No test credentials exist for them, and a payment cannot be completed end-to-end in Test mode. (Confirmed with Paymob, August 2026.)
 
-- Do **not** substitute a test card for kiosk and record the method as validated — that exercises the card rail, not the kiosk rail.
-- If the merchant is enabling kiosk, tell them **before** they plan go-live, not after. Cards and wallets validate in sandbox as normal, but kiosk verification has to be arranged with their Paymob account manager or `support@paymob.com`. Don't let a merchant treat a green sandbox run as covering a method that sandbox never touched.
+- **Kiosk** — Aman, Masary
+- **BNPL** — Valu, Souhoola, Tabby, Tamara, Sympl, and the other providers
 
-This file also has no entries for BNPL, Apple Pay, Google Pay, or bank installments. Don't assume they behave like cards, and don't infer a sandbox path for them from the card/wallet sections above — confirm with `support@paymob.com` for the specific method the merchant is enabling.
+What that means in practice:
+
+- Do **not** substitute a test card for one of these methods and record it as validated — that exercises the card rail, not theirs.
+- **A green sandbox run does not cover them.** If the merchant is enabling kiosk or BNPL, tell them *before* they plan go-live, not after: cards and wallets validate in sandbox as normal, but these have to be verified with their Paymob account manager or `support@paymob.com`. The Phase 3 exit criteria in `SKILL.md` ("only flip to Live after a full successful test run") is not achievable for these methods, so don't present a passing sandbox suite as clearing them.
+
+**Not confirmed either way — don't assume:** Apple Pay, Google Pay, and bank installments. (`README.md` notes bank installments are "Live IDs only," which points the same way, but confirm with `support@paymob.com` before telling a merchant whether they can test it.) Don't infer a sandbox path for any of these from the card/wallet sections above.
 
 ## Using them
 
