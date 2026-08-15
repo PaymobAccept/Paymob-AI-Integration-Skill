@@ -6,7 +6,7 @@ This repository ships integration guidance and tooling for the Paymob payment ga
 
 **Preferred:** open a [GitHub Security Advisory](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/security/advisories/new) for this repository. This reaches the maintainers privately and lets us coordinate a fix and disclosure timeline before any details go public.
 
-**Alternative:** email **support@paymob.com** with a subject line starting `SECURITY:` and a description of the issue. Do not include real API keys, Secret Keys, or HMAC secrets in a report — a redacted example or a synthetic reproduction is enough for us to investigate.
+**Alternative:** email **security@paymob.com** with a subject line starting `SECURITY:` and a description of the issue. Do not include real API keys, Secret Keys, or HMAC secrets in a report — a redacted example or a synthetic reproduction is enough for us to investigate.
 
 Please do not open a public issue or pull request that discloses an unpatched vulnerability, since this repository's content is consumed directly by AI coding agents integrating live payment flows.
 
@@ -28,4 +28,4 @@ This project is distributed as source (a Claude Code / Codex plugin, a portable 
 
 ## Scope
 
-This policy covers the content and packaging in this repository (`skills/`, `commands/`, `.claude-plugin/`, `.codex-plugin/`, `.mcp.json`, `AGENTS.md`, `universal-prompt.md`, and the validation/packaging scripts). It does not cover Paymob's own APIs, dashboard, or the `https://mcp.paymob.com/mcp` server's implementation — report those directly to Paymob support at **support@paymob.com** or through your account manager.
+This policy covers the content and packaging in this repository (`skills/`, `commands/`, `.claude-plugin/`, `.codex-plugin/`, `.mcp.json`, `AGENTS.md`, `universal-prompt.md`, and the validation/packaging scripts). It does not cover Paymob's own APIs, dashboard, or the `https://mcp.paymob.com/mcp` server's implementation — report a vulnerability in any of those to **security@paymob.com**, or raise a non-security issue with **support@paymob.com** or your account manager.

@@ -4,6 +4,7 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
+[![Cursor Directory](https://img.shields.io/badge/Cursor%20Directory-listed-000000)](https://cursor.directory/plugins/paymob-integration)
 <img src="https://lovable.dev/favicon.ico" alt="Lovable" width="16" height="16"> Lovable</a>
 
 **Claude.ai / ChatGPT / Lovable skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
@@ -12,7 +13,7 @@ Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](h
 
 Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, a tested **Lovable workspace skill**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents.
 
-> **This repository is the distribution channel.** Paymob has no listing yet in Anthropic's plugin directory, OpenAI's, or Lovable's marketplace, and the Paymob MCP server is not in any vendor connector registry. If you search a vendor marketplace for "Paymob" and find nothing, that's expected — not a mistake on your end. Every method below installs straight from this repo (or its release ZIP) and works today; the Claude Code path registers this repo as a *custom* marketplace, which needs no vendor listing. Vendor listings are something we hope to add later.
+> **Where it's listed.** Published on the [Cursor Directory](https://cursor.directory/plugins/paymob-integration). Not yet listed in Anthropic's plugin directory, OpenAI's, or Lovable's marketplace, and the Paymob MCP server is not yet in a vendor connector registry — so if you search one of those for "Paymob" and find nothing, that's expected rather than a mistake on your end. No listing is required either way: every method below installs straight from this repo (or its release ZIP), and the Claude Code path registers this repo as a *custom* marketplace.
 
 ---
 
@@ -43,7 +44,7 @@ The agent fetches the skill and puts it wherever its own convention expects. Tes
 
 Two things this path deliberately does *not* do:
 
-- **It doesn't register the Paymob MCP server**, so there's no live account access (payment links, transactions, balances, settlements). Agents leave it out on purpose — it's a persistent config change pointing at a live financial service. To get it, use the Claude Code plugin install (item 7 below), which bundles it, or add it yourself per [Live access](#live-access--paymob-mcp-server).
+- **It doesn't register the Paymob MCP server**, so there's no live account access (payment links, transactions, balances, settlements). Agents leave it out on purpose — it's a persistent config change pointing at a live financial service. To get it, use the Claude Code plugin install (item 8 below), which bundles it, or add it yourself per [Live access](#live-access--paymob-mcp-server).
 - **It doesn't namespace the skill.** Install it this way *and* as a plugin and you'll have two `paymob-integration` skills with identical descriptions; disable one to clear the ambiguity.
 
 ### 2. OpenAI Codex → install the standalone skill
@@ -68,7 +69,19 @@ Targeting the `skills/paymob-integration` subdirectory is required; the reposito
 
 You need a workspace owner, admin, or editor role to import a custom skill. Although Lovable also supports public GitHub imports, use the release ZIP for this repository: Lovable accepts `SKILL.md` only at the repository root or inside one wrapping folder, while this multi-agent plugin intentionally keeps it at `skills/paymob-integration/SKILL.md`.
 
-### 4. Coding agents → drop in `AGENTS.md`
+### 4. Cursor → install from the Cursor Directory
+
+Listed at **[cursor.directory/plugins/paymob-integration](https://cursor.directory/plugins/paymob-integration)**. Open the listing and use **Add to Cursor** on the component you want:
+
+| Component | What it gives you |
+|---|---|
+| **Skill** `paymob-integration` | The full integration guidance |
+| **MCP Server** `paymob` | Live account access — payment links, transactions, balances, settlements |
+| **Commands** ×3 | `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac` |
+
+The three commands read the skill's reference files at run time, so install the **Skill** component alongside them — on its own, a command will correctly refuse to answer rather than guess at a field order it cannot read.
+
+### 5. Coding agents → drop in `AGENTS.md`
 
 [`AGENTS.md`](https://agents.md) is an open standard that coding agents read **automatically** from your project's root folder. Natively supported by **OpenAI Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Zed, Jules, Devin, Factory, Amp, RooCode, Warp, JetBrains Junie**, and more.
 
@@ -82,13 +95,13 @@ curl -O https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Ski
 - Already have an `AGENTS.md`? Just paste this one's contents into it under a `## Paymob` heading.
 - Now ask your agent in plain English — *"Add Paymob card payments to my checkout"* — and it follows the Paymob rules automatically.
 
-### 5. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
+### 6. Chat assistants (ChatGPT · Gemini · Claude.ai · Copilot Chat …) → paste `universal-prompt.md`
 
 1. Open [`universal-prompt.md`](universal-prompt.md) and **copy the whole file**.
 2. Paste it into the assistant's **system prompt** / **custom instructions** (ChatGPT: *Settings → Personalization → Custom instructions*; Gemini: a *Gem*; Claude.ai: a *Project*'s instructions).
 3. Describe what you're building. It's fully self-contained — no other files needed.
 
-### 6. Prefer a pinned editor rules file? (optional)
+### 7. Prefer a pinned editor rules file? (optional)
 
 If you'd rather use your editor's native rules file instead of `AGENTS.md`, save [`universal-prompt.md`](universal-prompt.md) as:
 
@@ -99,7 +112,7 @@ If you'd rather use your editor's native rules file instead of `AGENTS.md`, save
 | GitHub Copilot | `.github/copilot-instructions.md` |
 | Cline · Continue · Roo | the tool's rules / context file |
 
-### 7. Claude Code / Cowork → install the full plugin
+### 8. Claude Code / Cowork → install the full plugin
 
 Pick this over item 1 when you want the **bundled live Paymob MCP server** (see [below](#live-access--paymob-mcp-server)) and namespaced plugin commands. Add this repository as a marketplace, then install the plugin:
 
@@ -247,7 +260,13 @@ The repository's `.claude-plugin/marketplace.json` makes the GitHub repository a
 
 Add `PaymobAccept/Paymob-AI-Integration-Skill` as a custom marketplace source, then install **Paymob Integration** from that marketplace.
 
-### Other agents (Cursor, Windsurf, Copilot, …)
+### Cursor (Cursor Directory)
+
+Listed at [cursor.directory/plugins/paymob-integration](https://cursor.directory/plugins/paymob-integration). Use **Add to Cursor** on the listing for the skill, the `paymob` MCP server, and the three commands.
+
+Install the **Skill** component alongside the commands. Each command resolves the skill's reference files at run time and stops rather than answering from memory if it can't reach them, so a command installed on its own is safe but inert.
+
+### Other agents (Windsurf, Copilot, …)
 
 ```bash
 git clone https://github.com/PaymobAccept/Paymob-AI-Integration-Skill.git
