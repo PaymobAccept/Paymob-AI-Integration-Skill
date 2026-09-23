@@ -91,28 +91,78 @@ function PaymentComplete() {
 
 ## Option B — Embedded Pixel SDK (checkout inside your page)
 
-When you want the payment form embedded rather than a full redirect. You still create the Intention on the backend and pass the `client_secret` + Public Key to the SDK.
+Source: https://developers.paymob.com/paymob-docs/developers/checkout-experiences/pixel-embedded (last updated by Paymob: September 7, 2026)
+
+Use Pixel when the merchant wants the payment form embedded in their own page (or a WebView) instead of a redirect. Pixel supports **card**, **Google Pay**, and **Apple Pay**. Everything else stays the same: the backend creates the Intention, the frontend gets only the Public Key and the `client_secret`, and payment status still comes from the HMAC-verified callback.
 
 ```html
-<script src="https://accept.paymob.com/unifiedcheckout/static/scripts/paymob-sdk.js"></script>
-<div id="paymob-container"></div>
-<script>
-  // base + script path can change — confirm the current embed snippet in the live docs
-  // (developers.paymob.com / wizard.paymob.com) before shipping.
-  const paymob = Paymob.init({
-    publicKey: "pk_test_xxxxxxxx",      // Public Key only — never the Secret Key
-    clientSecret: CLIENT_SECRET_FROM_YOUR_BACKEND,
-    elementId: "paymob-container",
-    afterPaymentComplete: (result) => {
-      // UI only — confirm real status from your backend callback
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/main.css">
+<script src="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/main.js" type="module"></script>
+
+<div id="paymob-elements"></div>
+<button id="pay-btn" style="display:none">Pay</button>
+
+<script type="module">
+  // Get these from YOUR backend (which created the intention with the Secret Key).
+  const { publicKey, clientSecret } = await fetch("/api/paymob/create-intention", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId: ORDER_ID }),
+  }).then((r) => r.json());
+
+  const payBtn = document.getElementById("pay-btn");
+
+  new Pixel({
+    publicKey,                                   // Public Key only — never the Secret Key
+    clientSecret,                                // unique per order, expires in 1 hour
+    paymentMethods: ["card", "google-pay", "apple-pay"],
+    elementId: "paymob-elements",
+    disablePay: true,                            // true = use your own button (payFromOutside)
+    showSaveCard: false,                         // true = offer "save card" to the customer
+    forceSaveCard: false,                        // true = save without asking — needs clear consent terms
+    cardValidationChanged: (isValid) => {
+      payBtn.style.display = isValid ? "block" : "none";
+    },
+    beforePaymentComplete: async () => { /* your own pre-payment logic */ },
+    afterPaymentComplete: async (response) => {
+      // UI only — the backend callback decides whether the order is paid
       window.location.href = "/payment/complete";
     },
-    onPaymentCancel: () => console.log("cancelled"),
+    onPaymentCancel: () => console.log("Apple Pay sheet closed"), // Apple Pay only
+    customStyle: {
+      Font_Family: "Inter",
+      Color_Primary: "#144DFF",
+      Radius_Border: "8",
+      // Direction: "rtl" plus Label_Text / Placeholder_Text / Error_Text / Button_Text for Arabic
+    },
+  });
+
+  // With disablePay: true, fire the payment from your own button by dispatching an
+  // event named "payFromOutside". The docs name the event but not its target —
+  // confirm the target (window vs. the Pixel element) on the doc page before shipping.
+  payBtn.addEventListener("click", () => {
+    window.dispatchEvent(new Event("payFromOutside"));
   });
 </script>
 ```
 
-> The embedded SDK's exact script URL, init options, and callback names are versioned by Paymob and can change. Pull the current embed snippet from `developers.paymob.com` (or the Integration Wizard's code lab) rather than relying on this sample verbatim — see `live-resources.md`.
+Key options (full list in the docs above):
+
+| Option / hook | What it does |
+|---|---|
+| `publicKey`, `clientSecret` | From your backend. `client_secret` is unique per order and expires in an hour |
+| `paymentMethods` | Any of `"card"`, `"google-pay"`, `"apple-pay"` |
+| `elementId` | ID of the element Pixel renders into |
+| `disablePay` | `true` hides Pixel's own Pay button; dispatch the `payFromOutside` event to pay |
+| `showSaveCard` / `forceSaveCard` | Offer card saving / save without asking |
+| `cardValidationChanged(isValid)` | Fires when card validity changes — use it to enable your own button |
+| `beforePaymentComplete` / `afterPaymentComplete(response)` | Your logic before / after Paymob processes the payment (after = UI only) |
+| `onPaymentCancel` | Apple Pay only — customer closed the Apple Pay sheet |
+| `updateIntentionData` | Refresh Pixel after the intention changes (backend calls the Intention Update API) |
+| `customStyle` | Fonts, colors, sizes, spacing, and Arabic/RTL text |
+
+> **Check before shipping.** Paymob's own sample loads `paymob-pixel@latest` from jsDelivr. For production, consider pinning a specific version so a new release can't change the checkout unexpectedly, and re-check the option names against the doc page above. Paymob's docs sample puts the Secret Key in the page for testing only — never do that; the Secret Key stays on the backend.
 
 ## Per-region base URL
 
