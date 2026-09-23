@@ -23,7 +23,10 @@ For broad integrations or audits, delegate independent read-only work such as co
 Before writing custom code, check the merchant's platform:
 - **Shopify** → install a Paymob app (Native Card Checkout for on-site cards; Paymob Accept for all methods; Sympl/valU for BNPL in Egypt). Do not hand-code.
 - **WooCommerce/WordPress, Magento 2, Odoo, OpenCart, PrestaShop, WHMCS, CS-Cart, ZenCart, Joomla, Laravel-Bagisto, osCommerce, Drupal, Staah** → install Paymob's official plugin for that platform and enter credentials in its settings. Do not hand-code.
+- **No website / no developer** → Payment Links: Dashboard → **Create → Quick Link**, choose amount, methods and Integration IDs, share by QR/WhatsApp/social/SMS/email. (QuickLink APIs exist for generating links from a system.)
 - **Custom / headless web, backend, or mobile app** → use the Intention API flow below.
+
+After installing a Shopify app, turn on its **test mode** button, pay a test order, then turn it off before going live. For plugins, set the plugin to **Test Mode** with test keys and **Test** Integration IDs first. WooCommerce merchants can also run **Store Check** on `https://wizard.paymob.com/` (deeper check via the Paymob Wizard Connector plugin: `https://wizard.paymob.com/store-doctor/downloads/paymob-wizard-connector.zip` — a diagnostic helper, not the payment plugin).
 
 ## REGIONAL BASE URLs
 
@@ -87,34 +90,39 @@ Update an intention (e.g. amount changed) with `PUT {base_url}/v1/intention/{cli
 {base_url}/unifiedcheckout/?publicKey={public_key}&clientSecret={client_secret}
 ```
 
-**Pixel SDK (embedded):**
+**Pixel SDK (embedded — card, Google Pay, Apple Pay):**
 ```html
-<script src="{base_url}/unifiedcheckout/static/scripts/paymob-sdk.js"></script>
-<div id="paymob-container"></div>
-<script>
-const paymob = Paymob.init({
-  publicKey: "pk_test_xxxxxxxx",            // Public Key only — never the Secret Key
-  clientSecret: clientSecret,               // from your backend
-  paymentMethods: ["card", "wallet"],
-  elementId: "paymob-container",
-  disablePay: false,
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/main.css">
+<script src="https://cdn.jsdelivr.net/npm/paymob-pixel@latest/main.js" type="module"></script>
+<div id="paymob-elements"></div>
+<script type="module">
+new Pixel({
+  publicKey: publicKey,                     // Public Key only — never the Secret Key
+  clientSecret: clientSecret,               // from your backend; unique per order, expires in 1 hour
+  paymentMethods: ["card", "google-pay", "apple-pay"],
+  elementId: "paymob-elements",
+  disablePay: false,                        // true = your own button, dispatching the "payFromOutside" event
   showSaveCard: false,
   forceSaveCard: false,
-  beforePaymentComplete: async () => true,
-  afterPaymentComplete: (result) => console.log("Done:", result),  // UI only
-  onPaymentCancel: () => console.log("Cancelled"),
   cardValidationChanged: (isValid) => { /* enable/disable your custom pay button */ },
-  customStyle: { background: "#fff", primaryColor: "#0070f3", borderRadius: "8px" }
+  beforePaymentComplete: async () => {},
+  afterPaymentComplete: async (response) => { /* UI only */ },
+  onPaymentCancel: () => {},                // Apple Pay only
+  customStyle: { Font_Family: "Inter", Color_Primary: "#144DFF", Radius_Border: "8" } // Direction: "rtl" for Arabic
 });
-// Trigger pay from your own button:
-document.getElementById("pay-btn").onclick = () => paymob.payFromOutside();
-// Update intention data before paying:
-paymob.updateIntentionData({ amount: 15000 });
 </script>
 ```
-The SDK script URL, init options, and callback names are versioned by Paymob — confirm the current embed snippet in the live docs before shipping.
+Source: `developers.paymob.com/paymob-docs/developers/checkout-experiences/pixel-embedded`. Consider pinning a version instead of `@latest` for production, and re-check option names against that page before shipping.
 
 **Native Mobile SDKs** (iOS/Android/Flutter/React Native): create the intention on the backend (never in the app — keep the Secret Key off the device), pass `client_secret` to the SDK, and present Normal (Hosted) or Embedded checkout. The SDK result is UX only.
+
+## WEBHOOK URL MUST BE PUBLIC
+
+`notification_url` works for all payment methods and must be a **public HTTPS URL** — Paymob cannot call `localhost`. While developing:
+- To **see** the raw callback: the user opens `https://hooks.paymob.com`, copies the unique Hook URL, and uses it as `notification_url` (it also shows GET redirects). It keeps no data — keep the page open during the test. It only displays requests; it doesn't forward them to the merchant's server.
+- To **test the merchant's own handler**: a tunnel (`ngrok http 3000`, `cloudflared tunnel --url http://localhost:3000`) or a deployed preview URL.
+- In live: only the merchant's production endpoint.
 
 ## WEBHOOK VALIDATION (HMAC-SHA512)
 
@@ -235,6 +243,8 @@ POST {base_url}/api/acceptance/payments/pay
 | Wallet MPIN | `123456` |
 | Wallet OTP | `123456` |
 
+**Test checkpoint:** when the integration is set up, ask "Ready to run a test payment?", confirm test mode, and show only the rows above for the methods the merchant enabled. Kiosk and BNPL have **no sandbox test path** — a card test covers the shared code; check the Integration ID, callback shape, and HMAC on the first real transaction. Sandbox support for Apple Pay, Google Pay, and bank installments isn't confirmed — ask Paymob support.
+
 Sandbox test data expires after 30 days. Paymob does not publish "decline" test cards — ask Paymob support for decline-simulation guidance if needed. Never use real cards in sandbox; switch to live credentials only after a full successful test run.
 
 ## COMMON ERRORS
@@ -248,6 +258,7 @@ Sandbox test data expires after 30 days. Paymob does not publish "decline" test 
 | Amount off by 100× | Amount not in cents | `Math.round(amount * 100)` |
 | Checkout not rendering | Wrong `publicKey` (used Secret Key) or stale/reused single-use `client_secret` | Use the Public Key; create a fresh intention |
 | Subscription HMAC fails | HMAC is in the body, not the query string | Read `hmac` from the request body |
+| Callback never arrives locally | `notification_url` is `localhost`/private | Use a hooks.paymob.com Hook URL to see it, or a tunnel/deployed URL to test the handler |
 
 ## LIVE ACCOUNT ACCESS — PAYMOB MCP SERVER (optional)
 
@@ -262,6 +273,11 @@ Use it for interactive testing and reconciliation. It complements — but does *
 When exact endpoints/field orders/SDK versions may have changed, these win over anything above:
 - `llms.txt` doc index — `https://developers.paymob.com/paymob-docs/getting-started/overview/llms.txt`
 - Developer docs — `https://developers.paymob.com/`
-- Integration Wizard (roadmap, runnable samples, HMAC/webhook tester) — `https://wizard.paymob.com/`
+- Integration Wizard (roadmap, code lab, sandbox links + "Pay with test card", HMAC checker, Store Check) — `https://wizard.paymob.com/`
+- Webhook inspector (see callbacks live, no retention, test only) — `https://hooks.paymob.com`
 - Community forum — `https://community.paymob.com/`
 - MCP server (live account actions) — `https://mcp.paymob.com/mcp`
+
+## WHAT YOU CAN OFFER
+
+If the user asks what you can do, or their request is vague, briefly list what fits their platform: sign-up and credentials; choosing a path (Payment Links, Shopify app, plugin, Unified Checkout, Pixel, mobile SDK); payment methods per market; webhooks and HMAC; guided sandbox testing; refunds/void/capture and reconciliation; subscriptions, saved cards, split payments, convenience fees; the Paymob MCP server for live account actions; the Integration Wizard and hooks.paymob.com. After a successful test, suggest one line of relevant next steps — not the whole list.

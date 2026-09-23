@@ -26,6 +26,8 @@ For broad integrations or audits, delegate independent read-only tasks such as c
 7. **Prefer a prebuilt integration when one exists.** Shopify → a Paymob app; WooCommerce/Magento/Odoo/OpenCart/PrestaShop/… → Paymob's official plugin. Only hand-code for custom/headless checkouts.
 8. **Every live write needs current, specific authorization.** Obtain explicit confirmation for the current account, test/live mode, operation, target, amount, and currency; never reuse blanket approval. Read remote state first and keep a stable operation fingerprint/merchant reference.
 9. **Never auto-retry an ambiguous financial write.** After a timeout or unclear response, query Paymob to determine whether it succeeded before retrying. Verify and report the remote result after every write.
+10. **`notification_url` must be public HTTPS** (it works for all payment methods). Paymob can't reach `localhost`: to just see callbacks, use a `https://hooks.paymob.com` Hook URL (the user opens the page and pastes it back; no retention, display only); to test the handler, use a tunnel or deployed URL. Never ship either as the live URL.
+11. **Always offer a test payment before go-live.** Ask "Ready to run a test payment?", confirm test mode (Shopify app test mode button, plugin Test Mode, or test keys + Test Integration IDs), and show only the test details for the enabled methods from `skills/paymob-integration/references/test-credentials.md`. How to test each integration type: `skills/paymob-integration/references/testing-guide.md`.
 
 ## Regional base URLs
 
