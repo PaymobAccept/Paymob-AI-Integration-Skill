@@ -31,7 +31,7 @@ Header: `Authorization: Token <SECRET_KEY>` (note the literal word "Token", not 
 | `extras` | object | no | Arbitrary custom merchant data; echoed back in callbacks under the payment `claims` object |
 | `special_reference` | string | no | Your own internal order ID — returned in the transaction callback as `merchant_order_id`. Use this to correlate orders |
 | `expiration` | number | no | Intention expiry in seconds |
-| `notification_url` | string | no | Your webhook endpoint — receives the POST callback with full transaction details. **Card Integration IDs only** |
+| `notification_url` | string | no | Your webhook endpoint — receives the POST callback with full transaction details. Works for **all payment methods** (cards, wallets, kiosk, BNPL, …). Must be a **publicly reachable HTTPS URL** — Paymob cannot call `localhost` (see *Making `notification_url` reachable* below) |
 | `redirection_url` | string | no | Where the customer is redirected after payment, with transaction details as query params. **Card and Wallet methods only**. Not authenticated — don't trust it for order state |
 
 ### Example request
@@ -116,3 +116,15 @@ Fix: always populate `billing_data.phone_number`.
 ## After payment: callbacks are the source of truth
 
 Paymob sends a `notification_url` POST with full transaction details once the payment is processed (success or fail), and separately redirects the customer via `redirection_url`. **Always treat the callback as authoritative and verify its HMAC before updating order state** (see `hmac-verification.md`) — the redirect is for UX only and its query params are not signed/verifiable the same way.
+
+## Making `notification_url` reachable
+
+Paymob's servers POST to `notification_url` from the internet, so the URL must be public HTTPS. A `localhost`, `127.0.0.1`, LAN, or VPN-only address silently never receives the callback — the checkout succeeds, but the order stays pending. Pick the option that matches what you're doing:
+
+| Goal | Use as `notification_url` | Notes |
+|---|---|---|
+| **See the raw callback** (payload shape, `hmac` query param, redirect params) | `https://hooks.paymob.com/<your-id>` — Paymob's own webhook inspector | The user opens `https://hooks.paymob.com`, copies the unique Hook URL it shows, and pastes it back to the agent (the agent cannot generate one). It shows POST, GET, and PUT requests live, so it also works as `redirection_url`. **No retention** — keep the page open while the test payment runs, or the request is not seen. Paste the captured payload into the Integration Wizard's HMAC checker (`https://wizard.paymob.com/`) to confirm the HMAC logic. |
+| **Test the merchant's own webhook handler end to end** | A tunnel to the local server (e.g. `ngrok http 3000`, `cloudflared tunnel --url http://localhost:3000`) or a deployed preview URL | Hosted builders (Replit, Lovable, Vercel/Netlify previews) already expose a public HTTPS URL — use it. Tunnel URLs usually change on restart; update `notification_url` when they do. |
+| **Live** | The merchant's own production HTTPS endpoint | Never leave a hooks.paymob.com or tunnel URL in live config. |
+
+hooks.paymob.com **only displays** requests — it does not forward them to the merchant's server, so their HMAC verification and order-update code never runs. Seeing a callback there proves Paymob sends it; it does **not** complete Phase 3 testing, which needs the merchant's own handler to receive, verify, and process the callback.

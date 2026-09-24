@@ -135,13 +135,16 @@ When you ask the agent for help integrating Paymob, it provides:
 
 - **Platform routing first** — detects Shopify, an official e-commerce plugin platform (WooCommerce, Magento, Odoo, OpenCart, PrestaShop, …), or a custom build, and steers you to the fastest correct path instead of hand-coding when a prebuilt integration already exists.
 - **Guided onboarding** — merchant-status check, dashboard credential collection, and sandbox-first testing before go-live.
-- **Complete Intention API knowledge** — the only official payment-creation flow, with Unified Checkout (redirect) and the Pixel SDK (embedded).
+- **Guided test payments** — the agent stops to offer a test payment, shows only the sandbox details for the methods you enabled, and explains how to test your integration type (custom web, Pixel, mobile, Shopify test mode, plugin Test Mode, Payment Links).
+- **Public webhook URL help** — explains why `localhost` never receives callbacks and offers [hooks.paymob.com](https://hooks.paymob.com) to inspect callbacks live, or a tunnel/deployed URL to test your handler.
+- **Capabilities menu** — ask "what can you do?" and get a short list of what fits your platform, plus a one-line next step after each milestone.
+- **Complete Intention API knowledge** — the only official payment-creation flow, with Unified Checkout (redirect) and the Pixel SDK (embedded), plus no-code Payment Links.
 - **Native Mobile SDK flow** — iOS / Android / Flutter / React Native, keeping the Secret Key off the device.
 - **Corrected, copy-ready code in your stack** — Node.js/TypeScript/NestJS, Python/Django/Flask/FastAPI, PHP/Laravel, .NET/C#, Ruby/Rails, and React/Next.js/Vue.
 - **All 3 HMAC types** — transaction, card token, and subscription — with exact field orders, SHA-512, and timing-safe comparison.
 - **Reconciliation** — a Transaction Inquiry fallback for callbacks that never arrive, stuck "pending" orders, and admin lookups.
 - **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
-- **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard, and community forum so the agent can confirm anything that may have changed.
+- **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard (including Store Check for WooCommerce), and community forum so the agent can confirm anything that may have changed.
 - **Safe multi-agent execution** — separates codebase mapping, live-doc verification, and security review while keeping file edits and all live payment actions serialized through one primary agent.
 - **Slash commands** (Claude Code / Cowork) — `/paymob-test-cards`, `/paymob-explain-error`, and `/paymob-check-hmac` for direct access to sandbox credentials, error lookups, and a webhook HMAC audit. See [Commands](#commands-claude-code--cowork).
 
@@ -342,8 +345,9 @@ Paymob-AI-Integration-Skill/
 │           ├── hmac-verification.md   # Transaction HMAC: field order, SHA-512, worked example
 │           ├── transaction-inquiry.md # Pull-based status checks / reconciliation
 │           ├── test-credentials.md    # Sandbox cards, wallets, OTPs
+│           ├── testing-guide.md       # Test checkpoint + how to test each integration type
 │           ├── advanced-features.md   # Subscriptions, saved cards (CIT/MIT), Auth/Cap, refund/void, split, fees
-│           ├── live-resources.md      # llms.txt, dev docs, Integration Wizard, community — when/how to use
+│           ├── live-resources.md      # llms.txt, dev docs, Integration Wizard, community, hooks.paymob.com — when/how to use
 │           ├── mcp-server.md          # Official Paymob MCP server: connect, authenticate, tool catalog, security
 │           ├── code-nodejs.md         # Node.js / TypeScript / Express / NestJS
 │           ├── code-python.md         # Python / Django / Flask / FastAPI
@@ -398,7 +402,8 @@ Specs embedded here are known-good as of **June 2026**. Paymob changes endpoints
 ## Support & resources
 
 - 📚 Developer docs — https://developers.paymob.com/
-- 🧭 Integration Wizard (roadmap, runnable samples, HMAC/webhook tester) — https://wizard.paymob.com/
+- 🧭 Integration Wizard (roadmap, code lab, HMAC checker, Store Check) — https://wizard.paymob.com/
+- 🪝 Webhook inspector (see callbacks live, test only) — https://hooks.paymob.com
 - 💬 Community forum — https://community.paymob.com/
 - ✉️ Support — support@paymob.com
 

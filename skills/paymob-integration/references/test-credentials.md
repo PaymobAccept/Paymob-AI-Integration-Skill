@@ -52,6 +52,8 @@ What that means in practice:
 
 ## Using them
 
+For **when** to prompt a test payment, **which** of these to show for the merchant's enabled methods, and **how** to test each integration type (custom web, Pixel, mobile SDK, Shopify, WooCommerce and other plugins, Payment Links), see `testing-guide.md`.
+
 1. Make sure the Integration ID used in the Intention request is the **Test** version of the relevant payment method (Cards or Wallets), and that the Secret Key used is also Test mode — mismatched modes cause a 404 on intention creation (see `intention-api.md`).
 2. Go through the real checkout flow (Unified Checkout redirect) and enter the test card / wallet details above as if you were the customer.
 3. Confirm:
