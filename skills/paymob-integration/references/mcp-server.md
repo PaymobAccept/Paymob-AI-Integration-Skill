@@ -50,7 +50,7 @@ Add the same object to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (glo
 
 The server follows a "configure, test, use" flow — its own `get_help` and `get_usage_examples` tools document it live:
 
-1. **Configure credentials** — provide your Paymob **API key** and **secret key** (from Dashboard → Developers → API Keys) to the server's credential-setup tool (`set_api_credentials`). Use **test** credentials first.
+1. **Configure credentials** — provide your Paymob **API key** and **secret key** (from Dashboard → **Settings → API Keys**; older dashboards show it under Developers → API Keys) to the server's credential-setup tool (`set_api_credentials`). Use **test** credentials first.
 2. **Test connectivity** — `test_api_connectivity` verifies the credentials work.
 3. **Discover methods** — `get_available_payment_methods` (pass `currency`, `is_live: false`) lists the Integration IDs available to you.
 
@@ -80,7 +80,7 @@ Then call any action tool. Prefer the `elicit_*` tools for guided, step-by-step 
 - `request_instant_settlement` — moves funds from your Paymob balance to your bank account.
 
 **Support & help:**
-- `create_support_ticket` — open a support ticket (terminal/payment issues).
+- `create_support_ticket` — open a support ticket (terminal/payment issues). This is a write: show the exact ticket text and account first, get explicit confirmation, and never include secrets. See the ticket template and redaction rules in `post-integration.md` §5.
 - `get_help`, `get_usage_examples` — the server's own live docs; call these first if a tool's fields are unclear.
 
 > The exact tool list is versioned by Paymob and may change. Call `tools/list` (or `get_help`) against the live server for the current set rather than treating this catalog as fixed.
@@ -102,6 +102,6 @@ Then call any action tool. Prefer the `elicit_*` tools for guided, step-by-step 
 |---|---|
 | Testing your account interactively (create a test intention/link, then pull it back) | Building the merchant's actual app/backend |
 | Reconciling: pulling transactions, balances, transfers, exports | Implementing the HMAC-verified webhook (the source of truth) |
-| Ad-hoc ops: issue a payment link, open a support ticket, request a settlement | Shipping production checkout, mobile SDK, or subscriptions code |
+| Ad-hoc ops: issue a payment link, open a support ticket, request a settlement (see `post-integration.md` for the operational playbook) | Shipping production checkout, mobile SDK, or subscriptions code |
 
 The MCP server does **not** replace your webhook: payment status in your app must still come from the HMAC-verified callback (`references/hmac-verification.md`), reconciled with Transaction Inquiry (`references/transaction-inquiry.md`) — which the MCP `get_*` tools make easy to do by hand.

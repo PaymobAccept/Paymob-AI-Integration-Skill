@@ -67,4 +67,4 @@ Paymob's Transaction Inquiry API also supports searching by **your own** order i
 - Base URL is the same regional base used for the Intention API (`accept.paymob.com`, `oman.paymob.com`, `ksa.paymob.com`, or `uae.paymob.com`).
 - Match Test/Live: an Inquiry auth token generated with a Test API Key will only see Test-mode transactions, and vice versa.
 - Rate-limit yourself: don't reconciliation-poll in a tight loop — a periodic job (e.g. every few minutes for "still pending" orders, falling off after some max age) is enough.
-- Treat the Inquiry response the same way you treat a verified callback: read `success`/`pending`/`is_voided`/`is_refunded` to determine real state, and update your order using the same idempotent logic keyed on `order.id` / `special_reference`.
+- Treat the Inquiry response the same way you treat a verified callback: read `success`/`pending`/`is_voided`/`is_refunded` to determine real state, and update your order through the same idempotent path the webhook uses: dedupe on the transaction `id`, correlate with `order.id` / `special_reference`, and compare-and-set the order state.

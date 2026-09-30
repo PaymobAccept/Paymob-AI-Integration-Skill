@@ -135,12 +135,46 @@ class Paymob
 
 > **Boolean fix:** PHP casts `true` to `"1"`, but Paymob's HMAC expects `"true"`/`"false"`. Use `boolStr()` (above) instead of plain `(string)` when concatenating, or HMAC verification silently fails.
 
-## Laravel webhook route
+## Laravel checkout + webhook routes
 
 ```php
-// routes/web.php  (or api.php)
+// routes/web.php  (in routes/api.php, drop the leading /api: Laravel prefixes it automatically)
 use Illuminate\Http\Request;
 use App\Contracts\PaymobPaymentEventStore;
+use App\Models\Order;
+
+// Request:  { orderId, customer: { firstName, lastName, email, phone } }
+// Response: { checkoutUrl, clientSecret, publicKey }  (same contract as every backend in this skill)
+Route::post('/api/checkout', function (Request $request) {
+    // Amount and items come from YOUR order record, never from the browser.
+    $order = Order::payable()->find((string) $request->input('orderId'));
+    if (! $order) {
+        return response()->json(['error' => 'Order not found or not payable'], 404);
+    }
+    $c = $request->input('customer', []);
+    if (empty($c['phone'])) {
+        return response()->json(['error' => 'customer.phone is required'], 400);
+    }
+    $paymob    = new Paymob();
+    $intention = $paymob->createIntention([
+        'amount_cents'      => $order->amount_cents,          // integer minor units stored server-side
+        'currency'          => $order->currency,
+        'payment_methods'   => [(int) env('PAYMOB_INTEGRATION_ID_CARD')],
+        'special_reference' => (string) $order->id,
+        'customer'          => [
+            'first_name' => $c['firstName'] ?? 'NA', 'last_name' => $c['lastName'] ?? 'NA',
+            'email'      => $c['email'] ?? 'NA',     'phone'     => $c['phone'],
+        ],
+        'items' => $order->lineItems->map(fn ($i) => [
+            'name' => $i->name, 'amount' => $i->amount_cents, 'quantity' => $i->quantity,
+        ])->all(),
+    ]);
+    return response()->json([
+        'checkoutUrl'  => $paymob->checkoutUrl($intention['client_secret']),
+        'clientSecret' => $intention['client_secret'],
+        'publicKey'    => env('PAYMOB_PUBLIC_KEY'),
+    ]);
+});
 
 Route::post('/api/paymob/webhook', function (Request $request) {
     $paymob   = new Paymob();
@@ -163,7 +197,7 @@ Route::post('/api/paymob/webhook', function (Request $request) {
 
 `PaymobPaymentEventStore::recordSuccessfulEvent` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `$obj['id']`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures propagate to non-2xx; only the outbox worker fulfills.
 
-In Laravel, exclude this route from CSRF protection (add the path to `VerifyCsrfToken::$except`).
+In Laravel, exclude only the webhook route from CSRF protection (add `api/paymob/webhook` to `VerifyCsrfToken::$except`); the browser-facing checkout route keeps it. `Order::payable()` stands for your own scope for unpaid orders.
 
 ## Gotchas
 

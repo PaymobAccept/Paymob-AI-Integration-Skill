@@ -37,6 +37,9 @@ Read that file first, from the root you resolved in Step 0 — don't rely on mem
 4. **Raw values**: fields are concatenated as received — no reformatted timestamps, no rounded or reformatted numbers, no inserted whitespace.
 5. **Fail closed**: a non-matching computed HMAC results in **no state change** — the handler returns/rejects before any database write, with no fallback path that updates order status anyway.
 6. **Idempotency**: enforced via a **unique constraint on `obj.id`** plus a transactional outbox, not a bare application-level "already processed" flag with no backing unique index. Flag an in-memory set, a non-unique-indexed boolean column, or a check-then-write pattern without a DB constraint as a failure, even if it looks like it works in testing.
+7. **Safe comparison**: the computed lowercase-hex digest is compared to the received value with a constant-time function (`crypto.timingSafeEqual`, `hmac.compare_digest`, `hash_equals`, `CryptographicOperations.FixedTimeEquals`, `OpenSSL.fixed_length_secure_compare`), and a missing, empty, or wrong-length `hmac` is rejected cleanly instead of throwing (for example, Node's `timingSafeEqual` throws on unequal buffer lengths, so the lengths must be checked first).
+8. **Value stringification**: booleans concatenate as lowercase `true`/`false` (flag Python `str(True)`, PHP `(string) true`, or anything else that produces `True` or `1`). Also check how null values are stringified, against the null-handling note in `hmac-verification.md`.
+9. **Where the `hmac` is read from**: transaction and card-token callbacks carry it in the query string; subscription callbacks carry it in the request body (see `hmac-verification.md` and `advanced-features.md`).
 
 If the merchant's integration also handles card-token or subscription callbacks, note that those use a different field list per `hmac-verification.md` and must not be assumed to share the transaction-callback order — check whether the code accounts for that separately.
 
@@ -50,4 +53,7 @@ Present the result as a pass/fail checklist per item, plus anything missing enti
 
 ## Step 4 — isolated testing
 
-For testing outside the codebase, point the user to Paymob's HMAC validator and webhook tester at `https://wizard.paymob.com/`, which lets them confirm their signature computation in isolation without exposing the secret in this conversation.
+For testing outside the codebase, point the user to two Paymob tools:
+
+- The **HMAC Signature Troubleshooter** on `https://wizard.paymob.com/`. It takes the HMAC hex value, the payload JSON, and the secret, and runs entirely in their browser, so the secret never enters this conversation.
+- `https://hooks.paymob.com`, to capture a real test callback payload first.

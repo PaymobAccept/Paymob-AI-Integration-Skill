@@ -10,25 +10,31 @@ The frontend's only job is: call **your** backend to create the Intention, then 
 
 ## Option A — Redirect to Unified Checkout (simplest, recommended)
 
-Your backend returns a `checkout_url` (it builds `https://{base}/unifiedcheckout/?publicKey=...&clientSecret=...`). The frontend just navigates to it.
+Every backend in this skill (`code-*.md`) exposes the same contract, so these snippets work with any of them:
+
+- `POST /api/checkout` with the body `{ orderId, customer: { firstName, lastName, email, phone } }`
+- The response is `{ checkoutUrl, clientSecret, publicKey }`
+
+> **CSRF:** Django, Rails, and Laravel keep CSRF protection on the browser-facing checkout route (only the server-to-server webhook is exempt), so add your framework's token header to these `fetch` calls:
+> - Django: `X-CSRFToken`, read from the `csrftoken` cookie
+> - Rails: `X-CSRF-Token`, read from `<meta name="csrf-token">`
+> - Laravel: `X-CSRF-TOKEN` from the meta tag, or `X-XSRF-TOKEN` from the cookie
+>
+> Node/Express and .NET minimal APIs don't add CSRF by default. If you authenticate with cookies there, add your own CSRF protection.
+
+The browser sends **only the order ID and customer details**. The backend looks up the amount and items from its own order record, so a customer can't edit the price in DevTools. The backend builds `checkoutUrl` as `{base_url}/unifiedcheckout/?publicKey=...&clientSecret=...`, and the frontend just navigates to it.
 
 ### React / plain JS
 
 ```jsx
-async function startCheckout(cart, customer, orderId) {
+// customer = { firstName, lastName, email, phone }  — phone is required by Paymob
+async function startCheckout(orderId, customer) {
   const res = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      amount: cart.total,          // your backend converts to cents
-      orderId,
-      items: cart.items,
-      first_name: customer.firstName,
-      last_name: customer.lastName,
-      email: customer.email,
-      phone: customer.phone,       // required by Paymob
-    }),
+    body: JSON.stringify({ orderId, customer }),   // no amount: the backend prices the order
   });
+  if (!res.ok) throw new Error(`Checkout failed: ${res.status}`);
   const { checkoutUrl } = await res.json();
   window.location.href = checkoutUrl;   // hand off to Paymob's hosted page
 }
@@ -38,13 +44,14 @@ async function startCheckout(cart, customer, orderId) {
 
 ```tsx
 "use client";
-export default function PayButton({ cart, customer, orderId }) {
+export default function PayButton({ orderId, customer }) {
   async function pay() {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: cart.total, orderId, items: cart.items, ...customer }),
+      body: JSON.stringify({ orderId, customer }),
     });
+    if (!res.ok) throw new Error(`Checkout failed: ${res.status}`);
     const { checkoutUrl } = await res.json();
     window.location.href = checkoutUrl;
   }
@@ -52,23 +59,24 @@ export default function PayButton({ cart, customer, orderId }) {
 }
 ```
 
-Implement `/api/checkout` as a Next.js Route Handler that calls `createIntention` from `code-nodejs.md` server-side (keeps the Secret Key on the server).
+Implement `/api/checkout` as a Next.js Route Handler (`app/api/checkout/route.ts`) that follows the Express route in `code-nodejs.md`: load the order server-side, call `createIntention`, and return `{ checkoutUrl, clientSecret, publicKey }`. The Secret Key stays on the server.
 
 ### Vue 3
 
 ```vue
 <script setup>
-async function pay(cart, customer, orderId) {
+async function pay(orderId, customer) {
   const res = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount: cart.total, orderId, items: cart.items, ...customer }),
+    body: JSON.stringify({ orderId, customer }),
   });
+  if (!res.ok) throw new Error(`Checkout failed: ${res.status}`);
   const { checkoutUrl } = await res.json();
   window.location.href = checkoutUrl;
 }
 </script>
-<template><button @click="pay(cart, customer, orderId)">Pay now</button></template>
+<template><button @click="pay(orderId, customer)">Pay now</button></template>
 ```
 
 ### The return page
@@ -76,13 +84,17 @@ async function pay(cart, customer, orderId) {
 After payment, Paymob redirects the customer to your `redirection_url` with transaction params (incl. an `hmac`). Show a neutral "we're confirming your payment" state and **fetch the real status from your backend** (which knows the truth from the verified callback). Do not flip the order to "paid" based on these query params.
 
 ```jsx
-// /payment/complete?order_id=...&success=...&hmac=...
+// /payment/complete?merchant_order_id=...&success=...&hmac=...
+import { useEffect, useState } from "react";
+
 function PaymentComplete() {
-  const orderId = new URLSearchParams(location.search).get("merchant_order_id")
-                ?? new URLSearchParams(location.search).get("order_id");
+  // merchant_order_id is YOUR special_reference. Don't fall back to Paymob's order_id:
+  // it's a different ID space and would look up the wrong order.
+  const orderId = new URLSearchParams(location.search).get("merchant_order_id");
   const [status, setStatus] = useState("checking");
   useEffect(() => {
-    fetch(`/api/orders/${orderId}/status`)   // your backend, source of truth
+    if (!orderId) { setStatus("unknown"); return; }
+    fetch(`/api/orders/${encodeURIComponent(orderId)}/status`)   // your backend, source of truth
       .then(r => r.json()).then(d => setStatus(d.paid ? "paid" : "pending"));
   }, [orderId]);
   return <p>Payment status: {status}</p>;
@@ -105,10 +117,11 @@ Use Pixel when the merchant wants the payment form embedded in their own page (o
 
 <script type="module">
   // Get these from YOUR backend (which created the intention with the Secret Key).
-  const { publicKey, clientSecret } = await fetch("/api/paymob/create-intention", {
+  // Same /api/checkout endpoint as Option A; Pixel uses publicKey + clientSecret instead of checkoutUrl.
+  const { publicKey, clientSecret } = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderId: ORDER_ID }),
+    body: JSON.stringify({ orderId: ORDER_ID, customer: CUSTOMER }),
   }).then((r) => r.json());
 
   const payBtn = document.getElementById("pay-btn");
@@ -127,7 +140,7 @@ Use Pixel when the merchant wants the payment form embedded in their own page (o
     beforePaymentComplete: async () => { /* your own pre-payment logic */ },
     afterPaymentComplete: async (response) => {
       // UI only — the backend callback decides whether the order is paid
-      window.location.href = "/payment/complete";
+      window.location.href = "/payment/complete?merchant_order_id=" + encodeURIComponent(ORDER_ID);
     },
     onPaymentCancel: () => console.log("Apple Pay sheet closed"), // Apple Pay only
     customStyle: {
@@ -175,4 +188,4 @@ Swap `accept.paymob.com` for the merchant's region in any URL the frontend build
 | KSA | `ksa.paymob.com` |
 | UAE | `uae.paymob.com` |
 
-(Ideally the frontend never hardcodes this — let the backend return the full `checkout_url`.)
+(Ideally the frontend never hardcodes this. Let the backend return the full `checkoutUrl`.)

@@ -20,6 +20,7 @@ Clean, correct reference (Intention API + Unified Checkout + HMAC-verified webho
 ## Service (`PaymobService.cs`)
 
 ```csharp
+using System.Net.Http.Json;          // PostAsJsonAsync
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -50,7 +51,7 @@ public class PaymobService
         _http.DefaultRequestHeaders.Add("Authorization", $"Token {_o.SecretKey}");
     }
 
-    public async Task<(long Id, string ClientSecret)> CreateIntentionAsync(
+    public async Task<(string Id, string ClientSecret)> CreateIntentionAsync(
         long amountCents, string currency, int[] paymentMethods,
         string specialReference, CustomerInfo c)
     {
@@ -78,7 +79,7 @@ public class PaymobService
         resp.EnsureSuccessStatusCode();
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
         var root = doc.RootElement;
-        return (root.GetProperty("id").GetInt64(),
+        return (root.GetProperty("id").ToString(),      // intention id is a string, not a number
                 root.GetProperty("client_secret").GetString()!);
     }
 
@@ -135,15 +136,23 @@ public class PaymobService
 ## Minimal-API endpoints (`Program.cs`)
 
 ```csharp
-app.MapPost("/api/checkout", async (CheckoutDto dto, PaymobService paymob, PaymobOptions o) =>
+// Request:  { orderId, customer: { firstName, lastName, email, phone } }
+// Response: { checkoutUrl, clientSecret, publicKey }  (same contract as every backend in this skill)
+app.MapPost("/api/checkout", async (CheckoutDto dto, PaymobService paymob, PaymobOptions o, IOrderRepository orders) =>
 {
+    // Amount comes from YOUR order record, never from the browser.
+    var order = await orders.GetPayableOrderAsync(dto.OrderId);
+    if (order is null) return Results.NotFound(new { error = "Order not found or not payable" });
+    if (string.IsNullOrWhiteSpace(dto.Customer?.Phone))
+        return Results.BadRequest(new { error = "customer.phone is required" });
+
     var (_, clientSecret) = await paymob.CreateIntentionAsync(
-        amountCents: (long)Math.Round(dto.Amount * 100),
-        currency: "EGP",
+        amountCents: order.AmountCents,                 // integer minor units stored server-side
+        currency: order.Currency,
         paymentMethods: new[] { o.IntegrationIdCard },
-        specialReference: dto.OrderId,
-        c: new CustomerInfo(dto.FirstName, dto.LastName, dto.Email, dto.Phone));
-    return Results.Ok(new { checkoutUrl = paymob.CheckoutUrl(clientSecret) });
+        specialReference: order.Id,
+        c: dto.Customer);
+    return Results.Ok(new { checkoutUrl = paymob.CheckoutUrl(clientSecret), clientSecret, publicKey = o.PublicKey });
 });
 
 app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob, IPaymobPaymentEventStore paymentStore) =>
@@ -161,17 +170,17 @@ app.MapPost("/api/paymob/webhook", async (HttpRequest req, PaymobService paymob,
         await paymentStore.RecordSuccessfulEventAsync(
             providerEventId: obj.GetProperty("id").ToString(),
             paymobOrderId: obj.GetProperty("order").GetProperty("id").ToString(),
-            merchantOrderId: obj.GetProperty("order").GetProperty("merchant_order_id").ToString());
+            merchantOrderId: obj.GetProperty("order").TryGetProperty("merchant_order_id", out var mo) ? mo.ToString() : "");
     }
     return Results.Ok(new { received = true });
 });
 
-record CheckoutDto(decimal Amount, string OrderId, string FirstName, string LastName, string Email, string Phone);
+record CheckoutDto(string OrderId, CustomerInfo Customer);   // CustomerInfo binds camelCase JSON by default
 ```
 
-`IPaymobPaymentEventStore.RecordSuccessfulEventAsync` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures propagate to non-2xx; only the outbox worker fulfills.
+`IOrderRepository.GetPayableOrderAsync` is your own lookup returning the unpaid order's `Id` (string), integer `AmountCents`, and `Currency` (or `null`). `IPaymobPaymentEventStore.RecordSuccessfulEventAsync` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures propagate to non-2xx; only the outbox worker fulfills.
 
-Register in DI: `builder.Services.AddSingleton(paymobOptions); builder.Services.AddHttpClient<PaymobService>(); builder.Services.AddScoped<IPaymobPaymentEventStore, PaymobPaymentEventStore>();`
+Register in DI: `builder.Services.AddSingleton(paymobOptions); builder.Services.AddHttpClient<PaymobService>(); builder.Services.AddScoped<IPaymobPaymentEventStore, PaymobPaymentEventStore>(); builder.Services.AddScoped<IOrderRepository, OrderRepository>();` (an unregistered interface parameter makes minimal APIs treat it as a request body and fail at startup)
 
 ## Gotchas
 

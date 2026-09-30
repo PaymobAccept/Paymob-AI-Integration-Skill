@@ -113,20 +113,30 @@ end
 #   post "/api/paymob/webhook",  to: "payments#webhook"
 
 class PaymentsController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:webhook, :checkout]
+  # Only the server-to-server webhook skips CSRF; the browser-facing checkout keeps it.
+  skip_before_action :verify_authenticity_token, only: [:webhook]
 
+  # Request:  { orderId, customer: { firstName, lastName, email, phone } }
+  # Response: { checkoutUrl, clientSecret, publicKey }  (same contract as every backend in this skill)
   def checkout
+    customer = params.fetch(:customer, {})
+    # Amount and items come from YOUR order record, never from the browser.
+    order = Order.payable.find_by(id: params[:orderId].to_s)
+    return render json: { error: "Order not found or not payable" }, status: :not_found unless order
+    return render json: { error: "customer.phone is required" }, status: :bad_request if customer[:phone].blank?
+
     paymob = Paymob.new
     intention = paymob.create_intention(
-      amount_cents: (params[:amount].to_f * 100).round,
-      currency: "EGP",
+      amount_cents: order.amount_cents,               # integer minor units stored server-side
+      currency: order.currency,
       payment_methods: [ENV["PAYMOB_INTEGRATION_ID_CARD"].to_i],
-      special_reference: params[:order_id].to_s,
-      customer: { first_name: params[:first_name] || "NA", last_name: params[:last_name] || "NA",
-                  email: params[:email], phone: params[:phone] },
-      items: []
+      special_reference: order.id.to_s,
+      customer: { first_name: customer[:firstName].presence || "NA", last_name: customer[:lastName].presence || "NA",
+                  email: customer[:email].presence || "NA", phone: customer[:phone] },
+      items: order.line_items.map { |i| { name: i.name, amount: i.amount_cents, quantity: i.quantity } }
     )
-    render json: { checkout_url: paymob.checkout_url(intention[:client_secret]) }
+    render json: { checkoutUrl: paymob.checkout_url(intention[:client_secret]),
+                   clientSecret: intention[:client_secret], publicKey: ENV["PAYMOB_PUBLIC_KEY"] }
   end
 
   def webhook
@@ -148,9 +158,7 @@ class PaymentsController < ApplicationController
 end
 ```
 
-`PaymobPaymentEventStore.record_successful_event!` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. The bang method must raise on failure so Rails returns non-2xx; only the outbox worker fulfills.
-
-## Gotchas
+`Order.payable` stands for your own scope for unpaid orders, and `amount_cents` / `line_items` for your stored integer amounts. `PaymobPaymentEventStore.record_successful_event!` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. The bang method must raise on failure so Rails returns non-2xx; only the outbox worker fulfills.
 
 ## Gotchas
 

@@ -85,8 +85,9 @@ export function verifyTransactionPostHmac(obj: any, receivedHmac: string): boole
   ];
   const computed = crypto.createHmac('sha512', HMAC_SECRET)
     .update(fields.map(String).join('')).digest('hex');
-  return computed.length === receivedHmac.length &&
-    crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(receivedHmac));
+  const a = Buffer.from(computed, 'utf8');
+  const b = Buffer.from(String(receivedHmac ?? ''), 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);   // length check first: timingSafeEqual throws on mismatch
 }
 
 // Post-payment ops
@@ -104,22 +105,28 @@ export const capture = (txnId: number, amountCents: number) =>
 import express from 'express';
 import { createIntention, checkoutUrl, verifyTransactionPostHmac } from './paymob';
 import { paymentEventStore } from './payment-event-store';
+import { orderRepository } from './order-repository';
 
 const router = express.Router();
 
+// Request:  { orderId, customer: { firstName, lastName, email, phone } }
+// Response: { checkoutUrl, clientSecret, publicKey }   (same contract for every backend in this skill)
 router.post('/api/checkout', express.json(), async (req, res) => {
-  const { amount, items, customer, orderId } = req.body;
+  const { orderId, customer } = req.body ?? {};
+  // Amount and items come from YOUR order record, never from the browser.
+  const order = await orderRepository.getPayableOrder(String(orderId));
+  if (!order) return res.status(404).json({ error: 'Order not found or not payable' });
+  if (!customer?.phone) return res.status(400).json({ error: 'customer.phone is required' });
+
   const { clientSecret } = await createIntention({
-    amountCents: Math.round(amount * 100),
-    currency: 'EGP',
+    amountCents: order.amountCents,            // integer minor units stored server-side
+    currency: order.currency,                  // e.g. 'EGP'
     paymentMethods: [Number(process.env.PAYMOB_INTEGRATION_ID_CARD)],
-    specialReference: String(orderId),
+    specialReference: String(order.id),
     customer,
-    items: (items ?? []).map((i: any) => ({
-      name: i.name, amount: Math.round(i.price * 100), quantity: i.quantity,
-    })),
+    items: order.items.map((i) => ({ name: i.name, amount: i.amountCents, quantity: i.quantity })),
   });
-  res.json({ checkoutUrl: checkoutUrl(clientSecret) });
+  res.json({ checkoutUrl: checkoutUrl(clientSecret), clientSecret, publicKey: process.env.PAYMOB_PUBLIC_KEY });
 });
 
 // Paymob POSTs the result here; hmac is a query param
@@ -140,13 +147,13 @@ router.post('/api/paymob/webhook', express.json(), async (req, res) => {
       return res.status(503).json({ error: 'Payment persistence failed' });
     }
   }
-  res.status(200).json({ received: true });   // 200 even on ignore, to stop retries
+  res.status(200).json({ received: true });   // 200 for verified events (including ignored non-success ones)
 });
 
 export default router;
 ```
 
-`paymentEventStore.recordSuccessfulEvent` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. It must reject on failure so the handler returns non-2xx; only the outbox worker fulfills.
+`orderRepository.getPayableOrder` is your own lookup: return the order's stored `amountCents` (integer), `currency`, and `items` (with `amountCents` per item) only if the order is still unpaid, otherwise `null`. `paymentEventStore.recordSuccessfulEvent` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj.id`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. It must reject on failure so the handler returns non-2xx; only the outbox worker fulfills.
 
 ## NestJS note
 
@@ -155,7 +162,7 @@ Wrap `createIntention`/`verifyTransactionPostHmac` in an injectable `PaymobServi
 ## Gotchas
 
 - Header is `Token <secret>` — **not** `Bearer`.
-- Amount is **cents** (`Math.round(amount * 100)`).
+- Amount is **cents**, stored as an integer on your order. Never trust an amount sent by the browser, and avoid float maths (`19.99 * 100` is `1998.9999…`).
 - `billing_data.phone_number` is required.
 - Verify HMAC **before** trusting `obj.success`. The redirect URL params are not authenticated — don't mark orders paid from them.
 - `client_secret` is single-use — create a new Intention per attempt.

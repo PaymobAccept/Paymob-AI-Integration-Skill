@@ -1,11 +1,10 @@
 # Paymob Integration Skill for AI Agents
 
-![version](https://img.shields.io/badge/version-3.3.0-blue)
+![version](https://img.shields.io/badge/version-3.4.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
 [![Cursor Directory](https://img.shields.io/badge/Cursor%20Directory-listed-000000)](https://cursor.directory/plugins/paymob-integration)
-<img src="https://lovable.dev/favicon.ico" alt="Lovable" width="16" height="16"> Lovable</a>
 
 **Claude.ai / ChatGPT / Lovable skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
 
@@ -77,9 +76,9 @@ Listed at **[cursor.directory/plugins/paymob-integration](https://cursor.directo
 |---|---|
 | **Skill** `paymob-integration` | The full integration guidance |
 | **MCP Server** `paymob` | Live account access — payment links, transactions, balances, settlements |
-| **Commands** ×3 | `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac` |
+| **Commands** ×5 | `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac`, `/paymob-go-live-check`, `/paymob-support-ticket` |
 
-The three commands read the skill's reference files at run time, so install the **Skill** component alongside them — on its own, a command will correctly refuse to answer rather than guess at a field order it cannot read.
+The commands read the skill's reference files at run time, so install the **Skill** component alongside them — on its own, a command will correctly refuse to answer rather than guess at a field order it cannot read.
 
 ### 5. Coding agents → drop in `AGENTS.md`
 
@@ -144,9 +143,11 @@ When you ask the agent for help integrating Paymob, it provides:
 - **All 3 HMAC types** — transaction, card token, and subscription — with exact field orders, SHA-512, and timing-safe comparison.
 - **Reconciliation** — a Transaction Inquiry fallback for callbacks that never arrive, stuck "pending" orders, and admin lookups.
 - **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
-- **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard (including Store Check for WooCommerce), and community forum so the agent can confirm anything that may have changed.
+- **Post-integration management** — Paymob's go-live stages and a merchant-side go-live checklist, go-live document upload, day-to-day Dashboard operations (transactions, orders, links, users & roles), refunds in ops, balances and disputes, monitoring and daily reconciliation, key rotation, and plugin/SDK updates.
+- **Diagnose & get support** — routes each symptom to the right Paymob tool (Code Lab, HMAC Signature Troubleshooter, Postman export, Virtual Showroom, Store Check, Mobe, hooks.paymob.com) and drafts a **redacted** support ticket for the wizard's Contact Support form, `support@paymob.com`, or the MCP server.
+- **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard (Code Lab, Store Check, Mobe, Contact Support), and community forum so the agent can confirm anything that may have changed.
 - **Safe multi-agent execution** — separates codebase mapping, live-doc verification, and security review while keeping file edits and all live payment actions serialized through one primary agent.
-- **Slash commands** (Claude Code / Cowork) — `/paymob-test-cards`, `/paymob-explain-error`, and `/paymob-check-hmac` for direct access to sandbox credentials, error lookups, and a webhook HMAC audit. See [Commands](#commands-claude-code--cowork).
+- **Slash commands** (Claude Code / Cowork) — `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac`, `/paymob-go-live-check`, and `/paymob-support-ticket` for sandbox credentials, error lookups, a webhook HMAC audit, a go-live readiness audit, and a redacted support-ticket draft. See [Commands](#commands-claude-code--cowork).
 
 ---
 
@@ -184,6 +185,8 @@ Once the plugin is installed, these slash commands give direct access to the mos
 | `/paymob-test-cards [card\|wallet\|kiosk\|bnpl]` | Prints sandbox test cards, wallet numbers, and OTPs from `references/test-credentials.md`, optionally filtered to one method. Always notes the 30-day sandbox expiry and that decline/error simulation isn't officially documented. For kiosk and BNPL it reports that sandbox can't test them at all, rather than offering a card as a stand-in. |
 | `/paymob-explain-error <code, status, or message>` | Looks up a Paymob error against the Troubleshooting table in `SKILL.md`, explains the cause, and — for code fixes — pulls the corrected snippet from the matching `references/code-*.md` file for your stack. Falls back to `references/live-resources.md` for anything not in the table instead of guessing. |
 | `/paymob-check-hmac [path]` | Statically audits your webhook HMAC verification against `references/hmac-verification.md`: SHA-512 (not SHA-256), exact field order, `body.obj` sourcing, no `obj.id`/`obj.order.id` mix-up, fail-closed behavior, and unique-constraint-backed idempotency. Never asks you to paste your HMAC secret or API key; only invoked manually, never automatically. |
+| `/paymob-go-live-check [path]` | Read-only go-live audit against the checklist in `references/post-integration.md`: live keys ↔ live Integration IDs, production `notification_url`, HMAC + idempotency, server-side pricing, reconciliation fallback, refund paths per method, secret-free logs — plus the Paymob approval stages still pending. Only invoked manually. |
+| `/paymob-support-ticket [problem]` | Suggests the Paymob self-serve tool that fits first, then drafts a **redacted** support ticket (no keys, HMAC secret, PAN, CVV, or OTPs; PII masked) and names the right channel — Mobe, community forum, the wizard's Contact Support form, `support@paymob.com`, or MCP `create_support_ticket` after explicit confirmation. |
 
 **Examples:**
 
@@ -192,6 +195,8 @@ Once the plugin is installed, these slash commands give direct access to the mos
 /paymob-explain-error 401 on intention create
 /paymob-explain-error HMAC mismatch
 /paymob-check-hmac src/webhooks/paymob.ts
+/paymob-go-live-check src/payments
+/paymob-support-ticket card payments failing since this morning in live
 ```
 
 ---
@@ -314,6 +319,9 @@ Once installed, the agent activates on any Paymob request — or even a generic 
 - "Integrate Apple Pay with Paymob in my React Native app"
 - "Reconcile a Paymob order that's stuck pending"
 - "Add Paymob to my Shopify / WooCommerce store"
+- "Are we ready to go live with Paymob?"
+- "Help me open a Paymob support ticket for a missing callback"
+- "My WooCommerce Paymob payments broke after an update"
 
 ---
 
@@ -325,14 +333,16 @@ Paymob-AI-Integration-Skill/
 ├── universal-prompt.md                # Portable prompt (Cursor, Windsurf, Copilot, ChatGPT, Gemini, …)
 ├── .mcp.json                          # Bundled Paymob MCP server (auto-registers when the plugin is enabled)
 ├── .codex-plugin/
-│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.3.0)
+│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.4.0)
 ├── .claude-plugin/
-│   ├── plugin.json                    # Claude Code plugin manifest (v3.3.0)
+│   ├── plugin.json                    # Claude Code plugin manifest (v3.4.0)
 │   └── marketplace.json               # Claude custom marketplace catalog
 ├── commands/                          # Claude Code slash commands (additive, Claude-only)
 │   ├── paymob-test-cards.md           # /paymob-test-cards — sandbox test cards/wallets
 │   ├── paymob-explain-error.md        # /paymob-explain-error — error code → cause + fix
-│   └── paymob-check-hmac.md           # /paymob-check-hmac — static HMAC verification audit
+│   ├── paymob-check-hmac.md           # /paymob-check-hmac — static HMAC verification audit
+│   ├── paymob-go-live-check.md        # /paymob-go-live-check — go-live readiness audit
+│   └── paymob-support-ticket.md       # /paymob-support-ticket — redacted ticket draft + channel routing
 ├── skills/
 │   └── paymob-integration/
 │       ├── SKILL.md                   # Workflow backbone + multi-agent safety
@@ -347,7 +357,8 @@ Paymob-AI-Integration-Skill/
 │           ├── test-credentials.md    # Sandbox cards, wallets, OTPs
 │           ├── testing-guide.md       # Test checkpoint + how to test each integration type
 │           ├── advanced-features.md   # Subscriptions, saved cards (CIT/MIT), Auth/Cap, refund/void, split, fees
-│           ├── live-resources.md      # llms.txt, dev docs, Integration Wizard, community, hooks.paymob.com — when/how to use
+│           ├── post-integration.md    # Go-live, Dashboard ops, monitoring, diagnostics tools, support tickets, key rotation
+│           ├── live-resources.md      # llms.txt, dev docs, Integration Wizard (Code Lab, Store Check, Mobe, support), community, hooks.paymob.com
 │           ├── mcp-server.md          # Official Paymob MCP server: connect, authenticate, tool catalog, security
 │           ├── code-nodejs.md         # Node.js / TypeScript / Express / NestJS
 │           ├── code-python.md         # Python / Django / Flask / FastAPI
@@ -397,12 +408,13 @@ Paymob-AI-Integration-Skill/
 
 ## Staying current
 
-Specs embedded here are known-good as of **June 2026**. Paymob changes endpoints, field orders, and SDK versions on its own schedule — the skill instructs the agent to cross-check the live docs ([`references/live-resources.md`](skills/paymob-integration/references/live-resources.md), especially the machine-readable `llms.txt` index) and lets the live docs win on any disagreement.
+Specs embedded here are known-good as of **June 2026** (post-integration and Integration Wizard coverage checked **September 2026**). Paymob changes endpoints, field orders, and SDK versions on its own schedule — the skill instructs the agent to cross-check the live docs ([`references/live-resources.md`](skills/paymob-integration/references/live-resources.md), especially the machine-readable `llms.txt` index) and lets the live docs win on any disagreement.
 
 ## Support & resources
 
 - 📚 Developer docs — https://developers.paymob.com/
-- 🧭 Integration Wizard (roadmap, code lab, HMAC checker, Store Check) — https://wizard.paymob.com/
+- 🧭 Integration Wizard (roadmap, Code Lab, HMAC Signature Troubleshooter, Store Check, Mobe, Contact Support, go-live documents) — https://wizard.paymob.com/
+- 🩺 Store Check (WordPress/WooCommerce store diagnostics) — https://wizard.paymob.com/store-doctor/
 - 🪝 Webhook inspector (see callbacks live, test only) — https://hooks.paymob.com
 - 💬 Community forum — https://community.paymob.com/
 - ✉️ Support — support@paymob.com

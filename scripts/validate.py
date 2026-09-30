@@ -559,6 +559,55 @@ def validate_upload_archive(errors: list[str]) -> None:
         second.unlink(missing_ok=True)
 
 
+
+REFERENCE_MENTION_PATTERN = re.compile(r"`(?:references/)?([a-z0-9-]+\.md)`")
+COMMAND_MENTION_PATTERN = re.compile(r"(?<![\w/])/(paymob-[a-z0-9-]+)")
+README_VERSION_PATTERN = re.compile(r"\(v(\d+\.\d+\.\d+)\)")
+
+
+def validate_cross_references(version: str, errors: list[str]) -> None:
+    """Catch drift between SKILL.md, references/, commands/, and the README."""
+    references_dir = SKILL_DIR / "references"
+    reference_names = {path.name for path in references_dir.glob("*.md")}
+    skill_text = read_text(SKILL_FILE, errors)
+
+    # Every reference file must be discoverable from SKILL.md's reference list.
+    for name in sorted(reference_names):
+        if f"references/{name}" not in skill_text:
+            errors.append(f"SKILL.md does not list references/{name}")
+
+    # Backtick mentions like `references/foo.md` or `foo.md` inside the skill,
+    # commands, AGENTS.md, and universal-prompt.md must point at a real file.
+    known_top_level = {"SKILL.md", "AGENTS.md", "README.md", "SECURITY.md", "universal-prompt.md"}
+    scanned = [SKILL_FILE, AGENTS, UNIVERSAL_PROMPT, *references_dir.glob("*.md"), *COMMANDS_DIR.glob("*.md")]
+    for path in scanned:
+        text = read_text(path, errors)
+        for match in REFERENCE_MENTION_PATTERN.finditer(text):
+            name = match.group(1)
+            if name in reference_names or name in known_top_level:
+                continue
+            errors.append(f"{path.relative_to(ROOT)} mentions missing reference file: {name}")
+
+    # Slash commands named anywhere user-facing must exist in commands/.
+    command_names = {path.stem for path in COMMANDS_DIR.glob("*.md")}
+    for path in (README, SKILL_FILE, CLAUDE_MANIFEST):
+        text = read_text(path, errors)
+        for name in sorted(set(COMMAND_MENTION_PATTERN.findall(text))):
+            if name not in command_names and name != SKILL_DIR.name:
+                errors.append(f"{path.relative_to(ROOT)} mentions missing command /{name}")
+    readme = read_text(README, errors)
+    for name in sorted(command_names):
+        if f"/{name}" not in readme:
+            errors.append(f"README does not document command /{name}")
+        if f"/{name}" not in skill_text:
+            errors.append(f"SKILL.md capabilities menu does not list command /{name}")
+
+    # Version strings in the README tree must match the manifests.
+    for found in sorted(set(README_VERSION_PATTERN.findall(readme))):
+        if version and found != version:
+            errors.append(f"README mentions version v{found}; manifests are v{version}")
+
+
 def main() -> int:
     errors: list[str] = []
     skill_name = validate_skill(errors)
@@ -569,6 +618,7 @@ def main() -> int:
     validate_safety_contract(errors)
     validate_commands(errors)
     validate_links(errors)
+    validate_cross_references(version, errors)
     validate_upload_archive(errors)
     if errors:
         print("Validation failed:")
@@ -578,7 +628,7 @@ def main() -> int:
     print(
         "Validation passed: skill, plugin catalogs/manifests, installation docs, "
         "release workflow, safety contract, Claude commands, MCP config, metadata, "
-        "links, and upload archive."
+        "links, cross-references, and upload archive."
     )
     return 0
 

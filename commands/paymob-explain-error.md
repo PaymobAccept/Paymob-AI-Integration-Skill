@@ -23,3 +23,4 @@ The user wants this Paymob error explained: $ARGUMENTS
    - Point the user to `references/live-resources.md`, in particular the `llms.txt` doc index, to look up the current, authoritative explanation.
    - Offer to fetch the relevant Paymob docs page yourself, or ask the user to paste the relevant section if the docs are blocked to automated fetches (Paymob's docs sit behind Cloudflare, which can 403 some fetchers).
    - If the user has narrowed it to a specific unlisted status code, note that it may be an account, region, or method-specific error not yet cataloged in this skill.
+5. If the error persists after the fix, or it points to the account rather than code (for example, live keys are missing or a method isn't enabled), suggest reproducing the request in the wizard's **Code Lab** (see `references/post-integration.md` §4). If it still fails there, suggest `/paymob-support-ticket` to draft a redacted ticket.

@@ -34,9 +34,22 @@ Content-Type: application/json
 { "transaction_id": 12345, "amount_cents": 10000 }
 ```
 
-- **Refund** — returns funds after settlement (full or partial via `amount_cents`). Availability varies by method (cards: yes; wallets: yes; most BNPL/kiosk: no — see the payment-methods notes in `intention-api.md`).
-- **Void** — cancels an authorization/transaction before settlement (card only).
-- **Capture** — captures a previously authorized (Auth/Capture) transaction.
+- **Refund**: returns funds after settlement, either in full or in part via `amount_cents`. Availability varies by method; see the table below.
+- **Void**: cancels a transaction before settlement, usually the same day. Only card-network methods support it.
+- **Capture**: captures a previously authorized (Auth/Capture) transaction.
+
+| Method | Regions | Refund | Void |
+|--------|---------|--------|------|
+| Cards (Visa, MC, Amex, MADA, OmanNet) | EGY, KSA, UAE, OMN | Yes | Yes |
+| Apple Pay | EGY, KSA, UAE, OMN | Yes | Yes |
+| Google Pay | KSA, UAE, OMN | Yes | Yes |
+| Mobile Wallets (Vodafone Cash, Orange Cash, e& money, WePay) | EGY | Yes | No |
+| StcPay | KSA | Yes | No |
+| BNPLs (Valu, Souhoola, Tabby, Tamara, Sympl, Aman, Forsa, Contact, and more) | EGY, KSA, UAE | No | No |
+| Bank Installments | EGY | No | No |
+| Kiosk (Aman, Masary) | EGY | No | No |
+
+Support can differ by account and provider. Confirm per method in the live docs (`live-resources.md`) before you ship a refund or void path. For refunds in day-to-day operations (dashboard vs API, partial refunds, and disputes), see `post-integration.md` §2.
 
 ```javascript
 // Node.js — refund/void/capture share the same auth header
@@ -124,9 +137,10 @@ function verifyCardTokenHmac(data, receivedHmac, secret) {
     data.card_subtype, data.created_at, data.email, data.id,
     data.masked_pan, data.merchant_id, data.order_id, data.token,
   ];
-  const computed = crypto.createHmac('sha512', secret)
-    .update(fields.map(String).join('')).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(receivedHmac));
+  const computed = Buffer.from(crypto.createHmac('sha512', secret)
+    .update(fields.map(String).join('')).digest('hex'));
+  const received = Buffer.from(String(receivedHmac ?? ''));
+  return computed.length === received.length && crypto.timingSafeEqual(computed, received);
 }
 ```
 
@@ -216,7 +230,7 @@ import hashlib, hmac
 def verify_subscription_hmac(body: dict, secret: str) -> bool:
     s = f"{body['trigger_type']}for{body['subscription_data']['id']}"
     computed = hmac.new(secret.encode(), s.encode(), hashlib.sha512).hexdigest()
-    return hmac.compare_digest(computed, body['hmac'])
+    return hmac.compare_digest(computed.encode(), str(body.get('hmac') or '').encode())
 ```
 
 ### Manage
@@ -250,4 +264,4 @@ Add a fee on top of the order, configurable as **percentage**, **fixed**, or **c
 
 - Verify the correct HMAC type per callback: **transaction** (20 fields, query param), **card token** (8 fields, query param), **subscription** (string formula, request body). Wrong type/order silently breaks verification — see `hmac-verification.md`.
 - Always SHA-512, always timing-safe compare, never log secrets.
-- Treat every callback as the source of truth only **after** HMAC passes, and process idempotently on `order.id` / `special_reference`.
+- Treat every callback as the source of truth only **after** HMAC passes. Deduplicate on the unique Paymob transaction/event ID (`obj.id`), and use `order.id` / `special_reference` only to correlate with your order (see `hmac-verification.md`).

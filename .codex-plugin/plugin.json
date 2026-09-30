@@ -1,7 +1,7 @@
 {
   "name": "paymob-integration",
-  "version": "3.3.0",
-  "description": "Integrate and verify Paymob payments across Egypt, UAE, KSA, and Oman with secure checkout, webhooks, reconciliation, and optional live account tools.",
+  "version": "3.4.0",
+  "description": "Integrate, verify, and operate Paymob payments across Egypt, UAE, KSA, and Oman: secure checkout, webhooks, reconciliation, go-live, diagnostics, support tickets, and optional live account tools.",
   "author": {
     "name": "Paymob Support",
     "email": "mohamedragab@paymob.com",
@@ -19,14 +19,16 @@
     "webhooks",
     "hmac",
     "reconciliation",
-    "multi-agent"
+    "multi-agent",
+    "go-live",
+    "support"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Paymob Integration",
     "shortDescription": "Secure Paymob checkout and account workflows",
-    "longDescription": "Workflow-driven guidance and optional live account tools for integrating Paymob checkout, verified webhooks, reconciliation, mobile SDKs, and advanced payment operations.",
+    "longDescription": "Workflow-driven guidance and optional live account tools for integrating Paymob checkout, verified webhooks, reconciliation, mobile SDKs, and advanced payment operations — then going live, operating, diagnosing with Paymob's Integration Wizard tools, and drafting redacted support tickets.",
     "developerName": "Paymob",
     "category": "Developer Tools",
     "capabilities": [
@@ -37,7 +39,9 @@
     "defaultPrompt": [
       "Add Paymob checkout and verified webhooks.",
       "Review my Paymob integration for security.",
-      "Reconcile a Paymob payment safely."
+      "Reconcile a Paymob payment safely.",
+      "Check if my Paymob integration is ready to go live.",
+      "Draft a Paymob support ticket for this issue."
     ]
   }
 }
