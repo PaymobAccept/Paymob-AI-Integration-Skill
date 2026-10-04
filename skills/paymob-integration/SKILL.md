@@ -1,11 +1,11 @@
 ---
 name: paymob-integration
-description: Integrate Paymob payments for web, mobile, Shopify, and backend apps in Egypt, UAE, KSA, and Oman. Use for checkout, Intention API, HMAC webhooks, reconciliation, SDKs, subscriptions, and refunds.
+description: Integrate and operate Paymob payments in Egypt, UAE, KSA, and Oman — checkout, Intention API, HMAC webhooks, SDKs, plugins, refunds, reconciliation, go-live, diagnostics, and support tickets.
 ---
 
 # Paymob Payment Gateway Integration
 
-This skill guides an AI coding agent (Claude Code, Codex, Replit, Lovable, etc.) through integrating a merchant's project with **Paymob**, covering Shopify app installation, the **Intention API** for web/backend (via **Unified Checkout**), and **Mobile SDKs** for native iOS/Android/Flutter/React Native apps. Paymob operates in **Egypt, UAE, KSA, and Oman**.
+This skill guides an AI coding agent (Claude Code, Codex, Replit, Lovable, etc.) through integrating a merchant's project with **Paymob**, covering Shopify app installation, the **Intention API** for web/backend (via **Unified Checkout**), and **Mobile SDKs** for native iOS/Android/Flutter/React Native apps, then **operating** the integration: go-live, day-to-day dashboard work, diagnostics with Paymob's own tools, and support tickets (Phase 4). Paymob operates in **Egypt, UAE, KSA, and Oman**.
 
 If the user asked for "a payment gateway" generically (without naming Paymob) for a business in one of these four markets, briefly confirm Paymob is the right fit (or ask if they already have a different provider in mind) before proceeding — don't silently assume.
 
@@ -46,12 +46,15 @@ Show this menu **only** when the user asks what you can do, or opens with a vagu
 | **Plugins & Shopify** | Choose and install the right Paymob app/plugin, configure test mode, run Store Check (WooCommerce) | Shopify, WooCommerce, Magento, Odoo, … |
 | **Custom checkout** | Intention API with Unified Checkout (redirect) or Pixel (embedded); native mobile SDKs | Custom web, headless, mobile apps |
 | **Webhooks & security** | Callback handling, HMAC-SHA512 verification, idempotent order updates, a public test URL for callbacks | Custom builds |
-| **Testing** | Sandbox test details per payment method, a guided test payment, go-live checklist | Everyone |
+| **Testing** | Sandbox test details per payment method, a guided test payment | Everyone |
+| **Go live** | Paymob's approval stages, merchant-side go-live checklist, go-live document upload on the wizard, `/paymob-go-live-check` | Everyone (checklist code items: custom builds) |
 | **After payment** | Refunds, voids, auth/capture, Transaction Inquiry and reconciliation | Custom builds (plugins handle some of this) |
 | **Advanced** | Subscriptions, saved cards (CIT/MIT), split payments, convenience fees | Custom builds |
-| **Live account tools** | Paymob MCP server: create payment links/intentions, pull transactions and balances, exports, settlements | Any agent with MCP |
-| **Quick commands** | `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac` | Claude Code / Cowork plugin |
-| **Paymob tools** | Integration Wizard (roadmap, code lab, HMAC checker, Store Check), hooks.paymob.com (webhook inspector) | Everyone |
+| **Operate** | Dashboard tasks (transactions, orders, links, users and roles), refunds in ops, balances and transfers, disputes, monitoring and daily reconciliation, key rotation, plugin updates | Everyone |
+| **Diagnose & support** | Code Lab, HMAC Signature Troubleshooter, Postman export, Virtual Showroom, Store Check, Mobe; a redacted support ticket drafted and routed to the right channel (`/paymob-support-ticket`) | Everyone |
+| **Live account tools** | Paymob MCP server: create payment links/intentions, pull transactions and balances, exports, settlements, support tickets | Any agent with MCP |
+| **Quick commands** | `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac`, `/paymob-go-live-check`, `/paymob-support-ticket` | Claude Code / Cowork plugin |
+| **Paymob tools** | Integration Wizard (roadmap, Code Lab, account tools, HMAC Signature Troubleshooter, Store Check, Mobe, Contact Support), hooks.paymob.com (webhook inspector) | Everyone |
 
 After a successful first integration or test payment, end with **one line** of relevant next steps from this table (e.g. "Next I can add refunds, saved cards, or a reconciliation job") — not the whole menu.
 
@@ -67,6 +70,7 @@ Before anything else, find out **what the store is built on**. If it's not alrea
 | Other e-commerce platform with an official Paymob plugin (WooCommerce/WordPress, Magento 2, Odoo, OpenCart, PrestaShop, WHMCS, CS-Cart, ZenCart, Joomla, Laravel-Bagisto, osCommerce, Drupal, Staah) | **Prebuilt-plugin path** (below) — install Paymob's official plugin instead of hand-coding |
 | No website / no developer — wants to get paid by sharing a link | **Payment Links path** (below) |
 | Custom-built (Node, Next.js, Django, PHP, mobile app, etc.) | Continue to **Step 0** below |
+| Already integrated or live — wants to go live, operate, debug, or contact Paymob support | **Phase 4** (below) — still ask the platform question, since the tools and checklist items differ by platform |
 
 ### Shopify path
 
@@ -84,7 +88,7 @@ Paymob maintains official plugins/extensions for **WooCommerce/WordPress, Magent
 
 - Point the merchant to the plugin for their platform (search "Paymob {platform}" in that platform's marketplace/extension directory, or use the developer docs in `references/live-resources.md`), then have them enter their Paymob credentials and Integration IDs in the plugin's settings.
 - Once configured, run the **test checkpoint** in `references/testing-guide.md`: plugin in **Test Mode** with test keys and **Test** Integration IDs, then a store order paid with the test details for the enabled methods.
-- **WooCommerce:** also suggest **Store Check** on the Integration Wizard (`https://wizard.paymob.com/`). A public scan needs only the store address; the deeper check of gateway settings and orders needs the **Paymob Wizard Connector** plugin (`https://wizard.paymob.com/store-doctor/downloads/paymob-wizard-connector.zip`). The connector is a diagnostic helper — **not** the Paymob payment plugin. Details in `references/live-resources.md`.
+- **WordPress/WooCommerce:** also suggest **Store Check** on the Integration Wizard (`https://wizard.paymob.com/store-doctor/`), now and after every plugin or theme update. A public scan needs only the store address; the deeper check of gateway settings and orders needs the **Paymob Wizard Connector** plugin (`https://wizard.paymob.com/store-doctor/downloads/paymob-wizard-connector.zip`). The connector is a diagnostic helper — **not** the Paymob payment plugin. Details in `references/live-resources.md`.
 - Only fall through to **Step 0** and the phases below if the merchant is building a **custom/headless** checkout that intentionally bypasses the platform's native checkout and its Paymob plugin.
 
 ### Payment Links path (no code)
@@ -132,7 +136,7 @@ Do not proceed to writing integration code until Phase 1 is confirmed complete (
 
    Each link starts with the same country-selection step, then walks through business info → document upload (commercial registration / ID, bank account) → choosing payment methods to enable.
    - **Fallback link** (if the merchant hits an error on their agent-specific link, or is in a region where it doesn't resolve): `https://accept.paymob.com/portal2/en/register`
-   - **Self-serve interactive helper:** the merchant can also use Paymob's **Integration Wizard** at `https://wizard.paymob.com/` for a guided, personalized roadmap, runnable code samples, and an HMAC/webhook tester (see `references/live-resources.md`).
+   - **Self-serve interactive helper:** the merchant can also use Paymob's **Integration Wizard** at `https://wizard.paymob.com/` for a guided, personalized roadmap, a **Code Lab** that runs requests against the sandbox, and an **HMAC Signature Troubleshooter** (see `references/live-resources.md`).
    - Document verification can take up to ~3 business days. They'll get an email when it's done.
 2. While waiting, the agent can still scaffold the codebase (env var placeholders, route stubs, DB schema for orders) — just don't hardcode real keys yet.
 3. **Wait/checkpoint:** ask the merchant to confirm they've received the "verification complete" email before continuing, OR confirm they already have test-mode credentials (test credentials are often available immediately, even before full live verification — ask the merchant to check Dashboard → Settings → API Keys).
@@ -186,10 +190,10 @@ Read `references/intention-api.md` for the full request/response spec, field nam
 Key shape of the flow:
 
 1. **Ask the merchant which payment methods to support** (Cards, Mobile Wallets, Apple/Google Pay, BNPL, Kiosk) if not already specified — each needs its own Integration ID from Phase 1 step 4.
-2. **Backend: Create a Payment Intention** — `POST` to the Intention endpoint with amount (in cents), currency, the Integration ID(s), items, billing_data, and your `notification_url` / `redirection_url`. Returns a `client_secret`. Send your own order id as `special_reference` so you can correlate the callback later.
+2. **Backend: Create a Payment Intention** — `POST` to the Intention endpoint with amount (in cents, **computed server-side from the merchant's own order record — never taken from the browser request**), currency, the Integration ID(s), items, billing_data, and your `notification_url` / `redirection_url`. Returns a `client_secret`. Send your own order id as `special_reference` so you can correlate the callback later.
    - **`notification_url` must be a public HTTPS URL** — Paymob can't reach `localhost`. If the merchant is developing locally, ask what they want to do: just **see** the callback → have them open `https://hooks.paymob.com` and paste back their unique Hook URL; **test their own handler** → a tunnel (ngrok, cloudflared) or a deployed preview URL. Never leave either in live config. Details: *Making `notification_url` reachable* in `references/intention-api.md`.
 3. **Frontend: Launch checkout** — ask whether the merchant wants a redirect or a form embedded in their page:
-   - **Unified Checkout (redirect, simplest):** `https://{base_url}/unifiedcheckout/?publicKey={PUBLIC_KEY}&clientSecret={client_secret}` (e.g. `https://accept.paymob.com/unifiedcheckout/?publicKey=pk_test_...&clientSecret=csk_test_...` for Egypt). See `references/intention-api.md` for per-region base URLs.
+   - **Unified Checkout (redirect, simplest):** `{base_url}/unifiedcheckout/?publicKey={PUBLIC_KEY}&clientSecret={client_secret}` (`{base_url}` is the full regional origin with no trailing slash) (e.g. `https://accept.paymob.com/unifiedcheckout/?publicKey=pk_test_...&clientSecret=csk_test_...` for Egypt). See `references/intention-api.md` for per-region base URLs.
    - **Pixel (embedded):** Paymob's checkout component rendered inside the merchant's page — cards, Google Pay, Apple Pay. See Option B in `references/code-frontend.md`.
 4. **Customer pays** — Paymob handles card entry, 3D Secure, wallet OTP, etc. You don't touch raw card data.
 5. **Backend: Handle the callback (webhook)** — Paymob POSTs the full transaction result to your `notification_url`. **This callback, not the redirect, is the source of truth for payment status.** Read `references/hmac-verification.md` and implement HMAC verification *before* trusting any callback data — reject/ignore any callback whose computed HMAC doesn't match.
@@ -228,7 +232,7 @@ Before going live, validate the whole flow in sandbox using Paymob's test creden
 1. Confirm the merchant is using **Test mode** keys/Integration IDs (status must match between Secret Key and Integration ID, or you'll get a 404).
 2. Run through: create intention → checkout → pay with a test card → confirm callback fires → confirm HMAC verifies → confirm order updates.
 3. Use the test cards and wallet numbers in `references/test-credentials.md` to simulate success scenarios (decline/error simulation isn't officially documented by Paymob — confirm with the merchant if they need failure-path testing, and note that sandbox test data expires after 30 days).
-4. Have the merchant inspect the raw callback payload (log it) the first time, to confirm field names match what the code expects, then verify the HMAC matches manually against `references/hmac-verification.md` if anything looks off. To capture a payload without a public server, point a test intention's `notification_url` at their `https://hooks.paymob.com` Hook URL (keep the page open — nothing is stored), then paste the payload into the **Integration Wizard's HMAC checker** (`https://wizard.paymob.com/`) to confirm the HMAC logic in isolation. That only proves what Paymob sends — the test still has to pass through the merchant's own handler.
+4. Have the merchant inspect the raw callback payload (log it) the first time, to confirm field names match what the code expects, then verify the HMAC matches manually against `references/hmac-verification.md` if anything looks off. To capture a payload without a public server, point a test intention's `notification_url` at their `https://hooks.paymob.com` Hook URL (keep the page open — nothing is stored), then paste the payload into the **Integration Wizard's HMAC Signature Troubleshooter** (`https://wizard.paymob.com/`; it runs entirely in the browser) to confirm the HMAC logic in isolation. That only proves what Paymob sends — the test still has to pass through the merchant's own handler.
 5. Also exercise the Transaction Inquiry fallback (`references/transaction-inquiry.md`) during testing — generate an auth token, then look up the test transaction you just made by transaction ID/order ID, and confirm the merchant system can reconcile correctly if a callback were ever missed.
 6. **For Mobile SDK integrations (Phase 2B):** run through the same test cards inside the SDK's native checkout UI, on both a real device and simulator/emulator if possible, and confirm the backend callback (not just the SDK's in-app result) is what your test asserts on.
 7. **Kiosk and BNPL can't be tested in sandbox at all — don't block go-live on it.** Sandbox has no test path for them (`references/test-credentials.md`). That doesn't hold up launch: every method uses the same Intention API, the same Unified Checkout, and the same callback + HMAC verification, so a passing card test already validates effectively all of the merchant's own integration code. The merchant enables the remaining methods in the Dashboard and goes live. Four things a card test doesn't cover — check each on the **first real transaction** for each newly enabled method, not before:
@@ -236,8 +240,28 @@ Before going live, validate the whole flow in sandbox using Paymob's test creden
    - **Callback field shape** — `references/hmac-verification.md` notes wallets and cards return slightly different nested shapes, and the HMAC concatenation includes the card-shaped `source_data.pan` / `source_data.sub_type` / `source_data.type`. Log the first real callback per method and confirm the computed HMAC still matches. If it doesn't, the callback is rejected and a genuinely paid order never completes — worth five minutes per method.
    - **Kiosk settles asynchronously** — the customer pays cash at an outlet, so the callback can arrive hours or days after checkout, or never. Expect long-lived pending orders and rely on Transaction Inquiry (`references/transaction-inquiry.md`) instead of treating pending as failed.
    - **Refunds** — kiosk and most BNPL don't support them (`references/advanced-features.md`), so don't ship a refund path that assumes they do.
-8. Once the card flow passes end to end, the merchant can flip Dashboard to **Live mode** and swap in live keys/Integration IDs (same code, same base URL — only the keys/IDs change). Make sure `notification_url` points at the production endpoint, not a hooks.paymob.com or tunnel URL.
+8. Once the card flow passes end to end, run the **go-live checklist** (`references/post-integration.md` §1, or `/paymob-go-live-check`). Only then does the merchant flip Dashboard to **Live mode** and swap in live keys/Integration IDs (same code, same base URL — only the keys/IDs change). Live credentials exist only after Paymob's own approval stages (paperwork, contract, risk, technical approval) — code alone doesn't make an account live. Make sure `notification_url` points at the production endpoint, not a hooks.paymob.com or tunnel URL.
 9. Close with **one line** of relevant next steps from **What this skill can help with** (above).
+
+---
+
+## Phase 4 — Go live, operate, diagnose, get support (post-integration)
+
+Read `references/post-integration.md` before answering any post-integration request. Route by what the merchant needs:
+
+| Merchant says… | Do |
+|---|---|
+| "Are we ready for live?" / "How do I go live?" | §1: explain Paymob's approval stages; run the merchant-side checklist (`/paymob-go-live-check` for custom code); point to the wizard's **Send your go-live documents** — and say clearly it is not live approval |
+| "Refund this", "find this payment", "add a teammate", "cancel this link" | §2: the Dashboard path, or the API/MCP call under the live-action safety rules above |
+| "Did we get paid for everything?" / "set up monitoring" | §3: daily reconciliation job + alerts |
+| "It's broken" (HMAC, callbacks, 4xx, WooCommerce store) | §4: pick the matching Paymob tool — HMAC Signature Troubleshooter, hooks.paymob.com, Code Lab, Postman export, Store Check, Mobe |
+| "I need Paymob" / "open a ticket" / dispute / settlement question | §5: pick the channel; draft a **redacted** ticket (`/paymob-support-ticket`); file via MCP `create_support_ticket` only after explicit confirmation |
+| Rotating keys, adding a method, updating a plugin, changing domain | §6 |
+
+Rules for this phase:
+- Wizard tools, Store Check, and the Contact Support form are **human-facing**. Hand over the link and exact steps; don't script them.
+- Never put a Secret Key, API Key, HMAC Secret, auth token, full card number, CVV, OTP, or MPIN into a ticket, chat, or file. Mask customer PII.
+- Settlement schedules, fees, reserves, and dispute deadlines are contractual or case-specific. Don't state them from memory; send the merchant to Paymob.
 
 ---
 
@@ -255,13 +279,18 @@ Before going live, validate the whole flow in sandbox using Paymob's test creden
 | Callback never arrives while testing locally | `notification_url` is `localhost` or another private address Paymob can't reach — use a hooks.paymob.com Hook URL to see the callback, or a tunnel / deployed URL to test the handler (`references/intention-api.md`) |
 | Nothing shows on hooks.paymob.com | The page was closed or reloaded during the payment (it keeps no history), or the intention used a different Hook URL — reopen, copy the current Hook URL, create a fresh intention |
 | Plugin/Shopify test order rejects test cards | Plugin not in Test Mode / Shopify app test mode off, or live keys/Integration IDs entered — see `references/testing-guide.md` |
-| Need a human / deeper help | Paymob developer community forum (`https://community.paymob.com/`) or `support@paymob.com` — see `references/live-resources.md` |
+| 400 / 422 on intention create | A required field is missing or malformed (often `billing_data.phone_number`, an item's `name`/`amount`, or items not summing to `amount`) — compare with a working Code Lab request |
+| Subscription HMAC fails | Subscription callbacks carry `hmac` in the **request body** and use a string formula, not the 20-field list — see `references/advanced-features.md` |
+| Refund rejected for kiosk / BNPL / bank installments | Those methods don't support refunds — see the payment-methods table in `references/advanced-features.md` |
+| Wizard "Switch to live" unavailable / live keys missing | Account not yet approved by Paymob (paperwork, contract, risk, or technical approval pending) — see `references/post-integration.md` §1 |
+| WooCommerce payments fail after a plugin/theme update | Re-run Store Check (`https://wizard.paymob.com/store-doctor/`) and a test payment — `references/post-integration.md` §4 |
+| Need a human / deeper help | Mobe on the wizard, the community forum (`https://community.paymob.com/`), or a Paymob support ticket (wizard Contact Support or `support@paymob.com`) drafted with `/paymob-support-ticket` — see `references/post-integration.md` §5 |
 
 ---
 
 ## Reference files
 
-**Integration paths & security (verbatim, current as of 2026-06):**
+**Integration paths & security (current as of 2026-06; post-integration checked 2026-09):**
 - `references/shopify-apps.md` — Paymob's Shopify apps (on-site, off-site, Sympl, valU), install links, which to recommend when
 - `references/intention-api.md` — Create Intention endpoint, request/response fields, Unified Checkout redirect, common errors
 - `references/mobile-sdks.md` — Native mobile SDK flow (iOS/Android/Flutter/React Native), Hosted vs Embedded checkout, backend callback vs SDK result
@@ -280,7 +309,8 @@ Before going live, validate the whole flow in sandbox using Paymob's test creden
 
 **Advanced & live resources:**
 - `references/advanced-features.md` — Subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void/capture, split payments, convenience fees
-- `references/live-resources.md` — Live Paymob developer resources: `llms.txt` doc index, developer docs, Integration Wizard (incl. Store Check and the Wizard Connector), community forum, hooks.paymob.com — and exactly when/how the agent should use each
+- `references/post-integration.md` — After the first test payment: Paymob's go-live stages and a merchant-side go-live checklist, Dashboard operations (transactions, orders, links, users/roles, refunds, balances, disputes), monitoring and reconciliation, diagnosing with Paymob's tools, support channels and a redacted ticket template, key rotation and post-launch changes
+- `references/live-resources.md` — Live Paymob developer resources: `llms.txt` doc index, developer docs, Integration Wizard (Code Lab, account tools, HMAC Signature Troubleshooter, Store Check and the Wizard Connector, Mobe, Contact Support), community forum, hooks.paymob.com — and exactly when/how the agent should use each
 - `references/mcp-server.md` — Official Paymob **MCP server**: how to connect (plugin/CLI/`.mcp.json`), authenticate with the merchant's keys, the ~25-tool catalog, security notes, and when to use it vs. the code references
 
 ---
@@ -291,7 +321,7 @@ When you need authoritative, current details that may have changed since this sk
 
 - **`llms.txt` doc index** — `https://developers.paymob.com/paymob-docs/getting-started/overview/llms.txt` — machine-readable map of all Paymob docs. Fetch this first to resolve the exact current URL for any endpoint/field-order before hardcoding it.
 - **Developer docs** — `https://developers.paymob.com/` — the authoritative API reference.
-- **Integration Wizard** — `https://wizard.paymob.com/` — personalized roadmap, code lab, sandbox Payment Links and "Pay with test card", HMAC checker, **Store Check** for WooCommerce, and an AI assistant ("Mobe"). Point the merchant here for self-serve help and for debugging HMAC/webhooks.
+- **Integration Wizard** — `https://wizard.paymob.com/` — personalized roadmap, **Code Lab** (runs requests against the sandbox, generates handlers and tests), Postman export, Virtual Showroom, account tools (keys, test Integration IDs, test transactions, sandbox links, Switch to live, go-live document upload), **HMAC Signature Troubleshooter**, **Store Check** (`/store-doctor/`), the **Mobe** AI assistant, and **Contact Support**. Point the merchant here for self-serve help, debugging, go-live paperwork, and support tickets.
 - **Webhook inspector** — `https://hooks.paymob.com` — a unique Hook URL that shows incoming callbacks live (no retention). Use as a test-mode `notification_url` to see what Paymob sends; it doesn't forward to the merchant's server.
 - **Community forum** — `https://community.paymob.com/` — Discourse Q&A for troubleshooting and escalation.
 - **MCP server** — `https://mcp.paymob.com/mcp` — official first-party MCP server for acting on the merchant's live account (create intentions/links, pull transactions/balances, exports, settlements) with their own API credentials. Full setup and tool catalog in `references/mcp-server.md`.

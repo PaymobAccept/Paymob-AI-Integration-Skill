@@ -6,10 +6,12 @@ Source: https://developers.paymob.com/paymob-docs/developers/intention-apis/crea
 
 Test and live modes share the same base URL per region — the mode is controlled entirely by which keys/Integration IDs you use, not the URL.
 
-- Egypt: `https://accept.paymob.com/`
-- Oman: `https://oman.paymob.com/`
-- Saudi Arabia: `https://ksa.paymob.com/`
-- UAE: `https://uae.paymob.com/`
+- Egypt: `https://accept.paymob.com`
+- Oman: `https://oman.paymob.com`
+- Saudi Arabia: `https://ksa.paymob.com`
+- UAE: `https://uae.paymob.com`
+
+Throughout this skill, `{base_url}` means one of these full origins, **with no trailing slash**. Paths are appended directly, as in `{base_url}/v1/intention/` and `{base_url}/unifiedcheckout/`.
 
 The Intention creation endpoint is `POST /v1/intention/` on the relevant base URL (confirm exact path in the merchant's Postman collection/API explorer for their region, since path casing can vary slightly by region).
 
@@ -78,7 +80,7 @@ Header: `Authorization: Token <SECRET_KEY>` (note the literal word "Token", not 
 Redirect the customer to Paymob's **Unified Checkout** (Paymob-hosted payment page) using this URL structure, built from the `client_secret` returned above and the merchant's **Public Key**:
 
 ```
-https://{base_url}/unifiedcheckout/?publicKey={PUBLIC_KEY}&clientSecret={client_secret}
+{base_url}/unifiedcheckout/?publicKey={PUBLIC_KEY}&clientSecret={client_secret}
 ```
 
 Example for an Egypt merchant:
@@ -123,7 +125,7 @@ Paymob's servers POST to `notification_url` from the internet, so the URL must b
 
 | Goal | Use as `notification_url` | Notes |
 |---|---|---|
-| **See the raw callback** (payload shape, `hmac` query param, redirect params) | `https://hooks.paymob.com/<your-id>` — Paymob's own webhook inspector | The user opens `https://hooks.paymob.com`, copies the unique Hook URL it shows, and pastes it back to the agent (the agent cannot generate one). It shows POST, GET, and PUT requests live, so it also works as `redirection_url`. **No retention** — keep the page open while the test payment runs, or the request is not seen. Paste the captured payload into the Integration Wizard's HMAC checker (`https://wizard.paymob.com/`) to confirm the HMAC logic. |
+| **See the raw callback** (payload shape, `hmac` query param, redirect params) | `https://hooks.paymob.com/<your-id>` — Paymob's own webhook inspector | The user opens `https://hooks.paymob.com`, copies the unique Hook URL it shows, and pastes it back to the agent (the agent cannot generate one). It shows POST, GET, and PUT requests live, so it also works as `redirection_url`. **No retention** — keep the page open while the test payment runs, or the request is not seen. Paste the captured payload into the Integration Wizard's HMAC Signature Troubleshooter (`https://wizard.paymob.com/`) to confirm the HMAC logic. |
 | **Test the merchant's own webhook handler end to end** | A tunnel to the local server (e.g. `ngrok http 3000`, `cloudflared tunnel --url http://localhost:3000`) or a deployed preview URL | Hosted builders (Replit, Lovable, Vercel/Netlify previews) already expose a public HTTPS URL — use it. Tunnel URLs usually change on restart; update `notification_url` when they do. |
 | **Live** | The merchant's own production HTTPS endpoint | Never leave a hooks.paymob.com or tunnel URL in live config. |
 

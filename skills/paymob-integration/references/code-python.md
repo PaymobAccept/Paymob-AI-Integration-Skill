@@ -80,7 +80,8 @@ class PaymobClient:
         ]
         concat = "".join(_paymob_str(f) for f in fields)
         computed = hmac.new(self.hmac_secret.encode(), concat.encode(), hashlib.sha512).hexdigest()
-        return hmac.compare_digest(computed, received_hmac or "")
+        # compare bytes: compare_digest raises TypeError on non-ASCII str input
+        return hmac.compare_digest(computed.encode(), str(received_hmac or "").encode())
 
     def refund(self, transaction_id: int, amount_cents: int) -> dict:
         return self._post("/api/acceptance/void_refund/refund",
@@ -110,27 +111,43 @@ def _paymob_str(v) -> str:
 
 ```python
 import json
+import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .paymob import PaymobClient
 from .payment_store import payment_store
+from .orders import get_payable_order
 
 paymob = PaymobClient()
 
-@csrf_exempt
-def create_checkout(request):
+# Request:  {"orderId": ..., "customer": {"firstName", "lastName", "email", "phone"}}
+# Response: {"checkoutUrl", "clientSecret", "publicKey"}  (same contract as every backend in this skill)
+@require_POST
+def create_checkout(request):          # browser-facing: keep Django's CSRF protection on
     data = json.loads(request.body)
+    customer = data.get("customer") or {}
+    # Amount and items come from YOUR order record, never from the browser.
+    order = get_payable_order(str(data.get("orderId", "")))
+    if order is None:
+        return JsonResponse({"error": "Order not found or not payable"}, status=404)
+    if not customer.get("phone"):
+        return JsonResponse({"error": "customer.phone is required"}, status=400)
     intention = paymob.create_intention(
-        amount_cents=round(float(data["amount"]) * 100),
-        currency="EGP",
+        amount_cents=order.amount_cents,               # integer minor units stored server-side
+        currency=order.currency,
         payment_methods=[int(os.environ["PAYMOB_INTEGRATION_ID_CARD"])],
-        special_reference=str(data["order_id"]),
-        customer={"first_name": data.get("first_name", "NA"),
-                  "last_name": data.get("last_name", "NA"),
-                  "email": data["email"], "phone": data["phone"]},
-        items=[],
+        special_reference=str(order.id),
+        customer={"first_name": customer.get("firstName") or "NA",
+                  "last_name": customer.get("lastName") or "NA",
+                  "email": customer.get("email") or "NA", "phone": customer["phone"]},
+        items=[{"name": i.name, "amount": i.amount_cents, "quantity": i.quantity} for i in order.items],
     )
-    return JsonResponse({"checkout_url": paymob.checkout_url(intention["client_secret"])})
+    return JsonResponse({
+        "checkoutUrl": paymob.checkout_url(intention["client_secret"]),
+        "clientSecret": intention["client_secret"],
+        "publicKey": os.environ["PAYMOB_PUBLIC_KEY"],
+    })
 
 @csrf_exempt
 def paymob_webhook(request):
@@ -148,7 +165,7 @@ def paymob_webhook(request):
     return JsonResponse({"received": True})
 ```
 
-`payment_store.record_successful_event` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures raise so Django returns non-2xx; only the outbox worker fulfills.
+`get_payable_order` is your own lookup: return the order (with integer `amount_cents`, `currency`, and `items` each carrying `amount_cents`) only while it is still unpaid, otherwise `None`. `payment_store.record_successful_event` is a required persistence adapter. In one database transaction it must insert a UNIQUE provider event keyed by `obj["id"]`, compare-and-set the order state, and insert a UNIQUE fulfillment outbox row. Let failures raise so Django returns non-2xx; only the outbox worker fulfills.
 
 ## Flask / FastAPI
 
