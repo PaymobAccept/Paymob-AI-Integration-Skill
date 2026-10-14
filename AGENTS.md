@@ -15,6 +15,10 @@ This repository is a portable **skill** that makes any AI coding agent an expert
 
 For broad integrations or audits, delegate independent read-only tasks such as codebase mapping, current-doc verification, and security review. Subagents receive no Paymob credentials, do not use authenticated Paymob tools, and return findings only with file/line references. Keep one primary agent responsible for requirements, final edits, tests, and every live action. If edits must be delegated, give agents exclusive non-overlapping paths and merge through the primary agent.
 
+## Replit and other hosted builders
+
+For Replit, read `skills/paymob-integration/references/replit.md` (or `references/replit.md` relative to the installed skill). Verify the skill import separately from payment connector availability. A missing connector alone does not establish an API prohibition; inspect the backend and enforced host restrictions. Use Replit Secrets, verify test/production `APP_URL` origins and public webhook reachability, and keep MCP optional. Preserve the user's provider choice and existing project rules, including the project-root `replit.md`; explain an enforced host restriction without trying to bypass it. Missing credentials permit scaffolding and local mocked tests, not authenticated API calls or a claim that payments work.
+
 ## Non-negotiable rules
 
 1. **Intention API only.** Create payments with `POST {base_url}/v1/intention/`. Never use or suggest the legacy 3-step flow (auth token → order → payment key).

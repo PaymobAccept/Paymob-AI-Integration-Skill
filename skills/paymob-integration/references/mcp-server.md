@@ -44,6 +44,18 @@ Add to the project's `.mcp.json` (or the client's MCP config):
 
 Add the same object to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global).
 
+### Replit — connect separately from skill import
+
+[Add Paymob MCP to Replit](https://replit.com/integrations?mcp=eyJkaXNwbGF5TmFtZSI6IlBheW1vYiIsImJhc2VVcmwiOiJodHRwczovL21jcC5wYXltb2IuY29tL21jcCJ9)
+
+This link uses Replit's documented install-link format and contains only the server name and public endpoint. It does not install the Paymob skill, supply credentials, or prove account access. Confirm the connection in Replit; its security scanner and workspace permissions still apply.
+
+For manual setup: open Replit Integrations, find the MCP Servers settings, select **+ Add MCP server**, enter display name **Paymob** and URL `https://mcp.paymob.com/mcp`, then select **Test & save**. Do not assume Replit reads the repository-root `.mcp.json` when importing a skill. Read `replit.md` for the combined skill/MCP setup request.
+
+After connection, verify tool discovery and read the server's current help without account credentials. Only then authenticate a test account through a host-supported secure input/runtime mechanism. Never put API keys in the install URL, a committed file, or ordinary chat. If the credential-setup tool cannot receive keys securely in this host, report that limitation; server registration alone is not authenticated account readiness. Replit connection/authentication behavior with this Paymob server has not been tested here.
+
+Sources: [Replit Connect via MCP](https://docs.replit.com/build/connect-via-mcp), [Replit MCP install-link format](https://docs.replit.com/features/mcp/overview).
+
 ---
 
 ## Authenticating (per session)

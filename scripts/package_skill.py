@@ -20,6 +20,19 @@ def source_files() -> list[Path]:
     return sorted(path for path in SKILL_DIR.rglob("*") if path.is_file())
 
 
+def archive_sources() -> dict[str, Path]:
+    """Map package paths to canonical sources, including the MIT notice."""
+    entries = {
+        PurePosixPath(ARCHIVE_ROOT, *path.relative_to(SKILL_DIR).parts).as_posix(): path
+        for path in source_files()
+    }
+    license_path = ROOT / "LICENSE"
+    if not license_path.is_file():
+        raise ValueError("Repository LICENSE is required for standalone distribution")
+    entries[f"{ARCHIVE_ROOT}/LICENSE"] = license_path
+    return entries
+
+
 def build_archive(output: Path) -> None:
     """Create a deterministic ZIP with one top-level skill folder."""
     output = output.resolve()
@@ -28,9 +41,7 @@ def build_archive(output: Path) -> None:
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for source in source_files():
-            relative = source.relative_to(SKILL_DIR)
-            archive_name = PurePosixPath(ARCHIVE_ROOT, *relative.parts).as_posix()
+        for archive_name, source in sorted(archive_sources().items()):
             info = zipfile.ZipInfo(archive_name, FIXED_TIMESTAMP)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
@@ -41,14 +52,17 @@ def build_archive(output: Path) -> None:
 def archive_errors(archive_path: Path) -> list[str]:
     """Return structural or content errors for an upload archive."""
     errors: list[str] = []
-    expected = {
-        PurePosixPath(ARCHIVE_ROOT, *path.relative_to(SKILL_DIR).parts).as_posix()
-        for path in source_files()
-    }
+    sources = archive_sources()
+    expected = set(sources)
     try:
         with zipfile.ZipFile(archive_path) as archive:
             names = {name for name in archive.namelist() if not name.endswith("/")}
             bad_entries = archive.testzip()
+            if len(archive.namelist()) != len(set(archive.namelist())):
+                errors.append("Archive contains duplicate entries")
+            for name in sorted(names & expected):
+                if archive.read(name) != sources[name].read_bytes():
+                    errors.append(f"Archive content differs from its canonical source: {name}")
     except (FileNotFoundError, zipfile.BadZipFile) as exc:
         return [f"Cannot read archive: {exc}"]
 

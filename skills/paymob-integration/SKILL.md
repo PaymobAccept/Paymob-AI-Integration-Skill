@@ -60,6 +60,10 @@ After a successful first integration or test payment, end with **one line** of r
 
 ## Step -1 — Check the platform first
 
+**Running in Replit?** Read `references/replit.md` first. Verify the skill was imported and its references are readable; inspect the existing app backend and host restrictions before choosing an integration route. A missing payment connector is not by itself proof that a custom Paymob API integration is prohibited. Respect an enforced host restriction, explain the exact blocker, and never substitute another provider without the user's choice.
+
+**Resolve references from the installed skill folder.** A folder-only install includes this file and `references/`, but not the repository-root `AGENTS.md`, Claude commands, or MCP registration. If a referenced file is missing, fetch that specific file from `https://raw.githubusercontent.com/PaymobAccept/Paymob-AI-Integration-Skill/main/skills/paymob-integration/references/`. If retrieval is unavailable, name the missing file and stop the affected task rather than inventing API details or declaring Paymob unsupported. Prefer a complete skill import to relying on remote fallback.
+
 Before anything else, find out **what the store is built on**. If it's not already obvious from context, ask:
 
 > "Is your store on Shopify or another e-commerce platform (WooCommerce, Magento, Odoo, …), is this a custom-built site/app, or do you just want to share payment links without a website?"
@@ -116,7 +120,7 @@ Route based on the answer:
 | Not registered with Paymob, or registered but verification/business docs incomplete | **Phase 1: Onboarding** (below) |
 | Already registered, has credentials and Integration ID(s) | Skip to **Step 0.5** (below) |
 
-Do not proceed to writing integration code until Phase 1 is confirmed complete (see exit criteria below) — the agent will not have a Secret Key or Integration ID to use otherwise.
+Until Phase 1 is complete, allow scaffolding, environment-variable placeholders, and local mocked tests. Do not make authenticated Paymob API requests or claim a working end-to-end integration without the required test credentials and Integration IDs.
 
 ---
 
@@ -151,9 +155,12 @@ Do not proceed to writing integration code until Phase 1 is confirmed complete (
    PAYMOB_API_KEY=
    PAYMOB_HMAC_SECRET=
    PAYMOB_INTEGRATION_ID_CARD=
+   PAYMOB_BASE_URL=
+   APP_URL=
    # add one var per enabled payment method (wallet, kiosk, etc.)
    ```
    (`PAYMOB_API_KEY` is only needed for the Transaction Inquiry / reconciliation flow — see `references/transaction-inquiry.md`.)
+   `APP_URL` is the merchant app's externally reachable HTTPS origin, used to build callback and redirect URLs; it is not the Paymob regional base URL. Verify test and production origins separately. On hosted platforms, use their environment-variable/Secrets facility instead of requiring a local `.env` file.
 
 **Exit criteria for Phase 1:** merchant has Secret Key, Public Key, HMAC Secret, and at least one Integration ID (Test mode is enough to proceed). Then continue below.
 
@@ -290,6 +297,8 @@ Rules for this phase:
 
 ## Reference files
 
+- `references/replit.md` — Replit install verification, skill/connector/MCP separation, host restrictions, Secrets, callback URLs, and test checkpoint; read first when running in Replit
+
 **Integration paths & security (current as of 2026-06; post-integration checked 2026-09):**
 - `references/shopify-apps.md` — Paymob's Shopify apps (on-site, off-site, Sympl, valU), install links, which to recommend when
 - `references/intention-api.md` — Create Intention endpoint, request/response fields, Unified Checkout redirect, common errors
@@ -299,7 +308,7 @@ Rules for this phase:
 - `references/test-credentials.md` — Sandbox test cards, wallet numbers, OTPs
 - `references/testing-guide.md` — Test checkpoint, which test details to show per payment method, and how to test each integration type (custom web, Pixel, mobile, Shopify, plugins, Payment Links)
 
-**Ready-to-use code (corrected, copy-ready):**
+**Stack-specific adaptation templates:** Retain the merchant's framework bootstrap and implement the required durable persistence adapters; these snippets are not standalone runnable apps.
 - `references/code-nodejs.md` — Node.js / TypeScript / Express / NestJS
 - `references/code-python.md` — Python / Django / Flask / FastAPI
 - `references/code-php.md` — PHP / Laravel

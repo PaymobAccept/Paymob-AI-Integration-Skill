@@ -29,6 +29,14 @@ Before writing custom code, check the merchant's platform:
 
 After installing a Shopify app, turn on its **test mode** button, pay a test order, then turn it off before going live. For plugins, set the plugin to **Test Mode** with test keys and **Test** Integration IDs first. WooCommerce merchants can also run **Store Check** on `https://wizard.paymob.com/` (deeper check via the Paymob Wizard Connector plugin: `https://wizard.paymob.com/store-doctor/downloads/paymob-wizard-connector.zip` — a diagnostic helper, not the payment plugin).
 
+## REPLIT AND HOSTED BUILDERS
+
+Treat a custom Replit web app as the custom web/backend path. First verify the Paymob skill was imported, then inspect the existing backend and enforced host restrictions. A skill teaches integration; it does not register a built-in payment connector or authenticate MCP. A missing connector alone does not establish an API prohibition. If custom external API code is permitted, use the existing server, database, and framework. If an enforced host rule prevents it, explain the exact blocker without trying to bypass it or substituting another provider without the user's choice. Dismissing a Stripe/Whop picker does not by itself cancel a Paymob request.
+
+Use Replit Secrets for sensitive environment variables; never request values in chat or print them. Configure `PAYMOB_BASE_URL` for the merchant region and `APP_URL` as the app's externally reachable HTTPS origin. Verify test and published-app settings separately. Replit injects environment variables; no local `.env` loader is needed there. Keep the Secret Key and HMAC Secret out of public frontend variables.
+
+Before testing callbacks, verify an external POST reaches the actual webhook route without login, an access interstitial, or a frontend HTML fallback. Prefer a stable test deployment; a preview can sleep, change URL, or require access. Persist orders, Paymob payment-attempt mappings, callback deduplication, and fulfillment outbox records in the app's durable database. Missing credentials allow scaffolding and local mocked tests, not authenticated API calls or a claim that payments work. Only after usable test credentials are configured, continue to the test payment checkpoint below. MCP is optional for integration code.
+
 ## ONBOARDING (no Paymob account yet)
 
 Send the merchant to the onboarding link tagged for the agent you're running in. Use `?partner=claude` in Claude, `codex` in Codex, `replit` in Replit, `lovable` in Lovable, and `aiflow` in any other agent: `https://onboarding.paymob.com/auth/country-selection/?partner=<tag>`. If that link errors, use the fallback `https://accept.paymob.com/portal2/en/register`. Document verification can take about 3 business days. Test credentials are often available sooner. The Integration Wizard (`https://wizard.paymob.com/`) gives a personalized roadmap.
@@ -54,6 +62,7 @@ Default to Egypt unless the user specifies a region. Use **test-mode** keys + te
 | PAYMOB_API_KEY | Only for the Transaction Inquiry / reconciliation auth-token flow |
 | PAYMOB_INTEGRATION_ID_CARD | One Integration ID per enabled payment method (card, wallet, kiosk, …) |
 | PAYMOB_BASE_URL | Your region's base URL |
+| APP_URL | Your app's externally reachable HTTPS origin for webhook and redirect URLs; configure test and production separately |
 
 ## PAYMENT CREATION FLOW
 

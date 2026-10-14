@@ -306,6 +306,10 @@ def validate_install_docs(version: str, errors: list[str]) -> None:
         "Settings → Skills",
         "choose the **ZIP** tab",
         "/paymob-integration",
+        "### Replit",
+        "Preview skills",
+        ".agents/skills/paymob-integration/",
+        "references/replit.md",
     )
     for command in required:
         if command not in readme:
