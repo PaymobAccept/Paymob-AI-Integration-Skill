@@ -2,6 +2,8 @@
 
 All endpoints below use the regional base URL from `intention-api.md` and, unless noted, the header `Authorization: Token <SECRET_KEY>` (the literal word `Token`, not `Bearer`). Amounts are in **cents** (10000 = 100.00 EGP). Verify exact current shapes against the live docs (`live-resources.md`) before going live — some of these features must be enabled on the merchant's account by Paymob first.
 
+**Not sure which of these the merchant needs?** `choose-integration.md` has the questionnaire, the trade-offs, and a worked example per feature. This file is the spec; that one is the decision. For which payment methods to enable and their per-region refund support, see `payment-methods.md`.
+
 ---
 
 ## Refund / Void / Capture (post-payment operations)
@@ -42,12 +44,15 @@ Content-Type: application/json
 |--------|---------|--------|------|
 | Cards (Visa, MC, Amex, MADA, OmanNet) | EGY, KSA, UAE, OMN | Yes | Yes |
 | Apple Pay | EGY, KSA, UAE, OMN | Yes | Yes |
-| Google Pay | KSA, UAE, OMN | Yes | Yes |
-| Mobile Wallets (Vodafone Cash, Orange Cash, e& money, WePay) | EGY | Yes | No |
+| Google Pay | KSA, UAE | Yes | Yes |
+| Samsung Pay | UAE | Yes | Confirm |
+| Mobile Wallets (Vodafone Cash, Orange Cash, e& money, We Pay, bank wallets) | EGY | Yes | No |
 | StcPay | KSA | Yes | No |
-| BNPLs (Valu, Souhoola, Tabby, Tamara, Sympl, Aman, Forsa, Contact, and more) | EGY, KSA, UAE | No | No |
-| Bank Installments | EGY | No | No |
-| Kiosk (Aman, Masary) | EGY | No | No |
+| BNPLs (15 providers) | EGY, KSA, UAE | **Yes — per provider** | No |
+| Bank Installments | EGY | Yes | No |
+| Kiosk (cash at an outlet) | EGY | **No** | No |
+
+**BNPL and bank installments are refundable.** An earlier version of this table said they weren't. Twelve of the fifteen BNPL providers support full *and partial* refunds; Tamara, Premium, and Seven are full-only; bank installments support both. Kiosk is the one method here with no refund path at all. The per-provider table is in `payment-methods.md`.
 
 Support can differ by account and provider. Confirm per method in the live docs (`live-resources.md`) before you ship a refund or void path. For refunds in day-to-day operations (dashboard vs API, partial refunds, and disputes), see `post-integration.md` §2.
 
@@ -99,6 +104,25 @@ Authorization: Token {SECRET_KEY}
    …or release the hold with the **void** endpoint above.
 
 > Some accounts use `payment_type: "AUTH"` instead of `is_auth: true` on the Intention. Confirm which your merchant's account expects against the live docs.
+
+---
+
+## MOTO (Mail Order / Telephone Order) and Verification
+
+Two card transaction types Paymob enables per account. Neither is self-serve, and **Paymob does not publish their request shape** — so this section is decision guidance plus what to confirm, not a spec. Do not infer or invent fields for either one; if you cannot confirm the shape in the live docs (`live-resources.md`) or from the merchant's account manager, say so and stop rather than shipping a guess.
+
+**MOTO** is a card-not-present charge used for back-to-back requests without customer interaction — the customer is on a phone call, on WhatsApp, or ordering by mail, and the merchant's staff enter the card. It passes both OTP and CVV. Refund and void are both supported, full or partial.
+
+Before proposing it, four things the merchant has to agree to:
+
+1. **A Payment Link is usually the better answer.** It keeps card data out of the merchant's hands entirely. MOTO is the fallback for when sending a link genuinely isn't possible.
+2. **PCI DSS scope.** Staff handling PAN and CVV pulls the merchant into PCI scope. Never build a screen that stores, logs, or persists a PAN or CVV, and never put either in an order record. This is a compliance decision for the merchant, not a technical one.
+3. **Chargeback liability.** No 3DS challenge means liability sits with the merchant rather than the issuer. Say so before launch, not after the first dispute.
+4. **Account enablement.** Paymob turns it on; expect a separate Integration ID. The merchant arranges it with their account manager, and it isn't instant.
+
+**Verification** checks a card's details and available balance *without* reserving or transferring funds — used to confirm a card is good before a later MOTO or Verification charge. It is narrow: when a hold would serve, use Auth/Capture above instead. Same caveat on the request shape.
+
+Everything else is unchanged: the callback is still the source of truth, still HMAC-verified (transaction HMAC), still deduplicated on `obj.id`.
 
 ---
 

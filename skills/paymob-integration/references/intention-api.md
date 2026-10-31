@@ -33,6 +33,7 @@ Header: `Authorization: Token <SECRET_KEY>` (note the literal word "Token", not 
 | `extras` | object | no | Arbitrary custom merchant data; echoed back in callbacks under the payment `claims` object |
 | `special_reference` | string | no | Your own internal order ID — returned in the transaction callback as `merchant_order_id`. Use this to correlate orders |
 | `expiration` | number | no | Intention expiry in seconds |
+| `pre_selected_plan` | number | no | Instalment plan id the customer already chose on the product/cart page via the Affordability Widget — the customer then only enters card details at checkout. `amount` stays the **full order total**, never the widget's monthly figure. See `code-frontend.md` Option C |
 | `notification_url` | string | no | Your webhook endpoint — receives the POST callback with full transaction details. Works for **all payment methods** (cards, wallets, kiosk, BNPL, …). Must be a **publicly reachable HTTPS URL** — Paymob cannot call `localhost` (see *Making `notification_url` reachable* below) |
 | `redirection_url` | string | no | Where the customer is redirected after payment, with transaction details as query params. **Card and Wallet methods only**. Not authenticated — don't trust it for order state |
 

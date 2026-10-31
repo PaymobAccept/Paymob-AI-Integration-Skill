@@ -62,6 +62,7 @@ If the merchant enabled several methods, show each matching block — and nothin
 - **Run:** open the link and pay with the test details from section 2. The wizard's **"Pay with test card"** button runs the same check in one step.
 - **Passes when:** the link shows as paid and the transaction appears in the Dashboard (Test mode).
 - For links created through the API, see the QuickLink APIs in the developer docs (`live-resources.md`), and test the webhook exactly as for custom web.
+- **PayMe handles cannot be tested this way — they are Live mode only.** Verify the Quick Link flow in Test mode first, then have the merchant create the PayMe handle and check it with one small real payment. Tell them before they create it that the handle is permanently tied to their MID and can be renamed only once without a risk review, so the name is worth getting right the first time.
 
 ## 4. After a passing test
 
