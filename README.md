@@ -1,6 +1,6 @@
 # Paymob Integration Skill for AI Agents
 
-![version](https://img.shields.io/badge/version-3.4.1-blue)
+![version](https://img.shields.io/badge/version-3.6.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Replit%20%C2%B7%20Lovable%20%C2%B7%20Cursor%20%C2%B7%20Windsurf%20%C2%B7%20Copilot%20%C2%B7%20Codex-8A2BE2)
 ![regions](https://img.shields.io/badge/regions-EGY%20%C2%B7%20UAE%20%C2%B7%20KSA%20%C2%B7%20OMN-orange)
@@ -8,7 +8,7 @@
 
 **Claude.ai / ChatGPT / Lovable skill upload:** [Download `paymob-integration.zip`](https://github.com/PaymobAccept/Paymob-AI-Integration-Skill/releases/latest/download/paymob-integration.zip) — do not use GitHub's **Code → Download ZIP**.
 
-Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](https://paymob.com) payment gateway across **Egypt, UAE, KSA, and Oman**. The agent routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, kiosk, and bank installments — on any tech stack.
+Give any AI coding agent expert, **workflow-driven** knowledge of the [Paymob](https://paymob.com) payment gateway across **Egypt, UAE, KSA, and Oman**. The agent routes the developer by platform, walks through onboarding, and produces correct, copy-ready code for accepting cards, mobile wallets, BNPLs, Apple Pay, Google Pay, Samsung Pay, kiosk, and bank installments — on any tech stack. It also asks the questions merchants forget to: whether the money recurs, gets taken on a phone call, or waits until the order ships.
 
 Ships as a native **Codex/ChatGPT plugin**, a **Claude Code/Cowork plugin**, a tested **Lovable workspace skill**, a standard skill folder for **Replit GitHub import**, and a portable prompt (`universal-prompt.md`) + `AGENTS.md` for Cursor, Windsurf, GitHub Copilot, Gemini, and other agents. Replit guidance is checked against official documentation; a successful Replit import and payment flow must be verified in the user's project.
 
@@ -148,17 +148,20 @@ When you ask the agent for help integrating Paymob, it provides:
 - **Guided test payments** — the agent stops to offer a test payment, shows only the sandbox details for the methods you enabled, and explains how to test your integration type (custom web, Pixel, mobile, Shopify test mode, plugin Test Mode, Payment Links).
 - **Public webhook URL help** — explains why `localhost` never receives callbacks and offers [hooks.paymob.com](https://hooks.paymob.com) to inspect callbacks live, or a tunnel/deployed URL to test your handler.
 - **Capabilities menu** — ask "what can you do?" and get a short list of what fits your platform, plus a one-line next step after each milestone.
-- **Complete Intention API knowledge** — the only official payment-creation flow, with Unified Checkout (redirect) and the Pixel SDK (embedded), plus no-code Payment Links.
+- **Complete Intention API knowledge** — the only official payment-creation flow, with Unified Checkout (redirect), the Pixel SDK (embedded), and the Affordability Widget for showing instalment plans before checkout, plus no-code Quick Links and permanent PayMe handles.
+- **3D Secure, explained** — what the issuing bank decides, why there's nothing to implement, and the two things it actually changes: abandoned OTP screens produce no callback and leave orders pending, and "the OTP never arrived" is never the merchant's to fix.
 - **Native Mobile SDK flow** — iOS / Android / Flutter / React Native, keeping the Secret Key off the device.
 - **Stack-specific adaptation templates** — Node.js/TypeScript/NestJS, Python/Django/Flask/FastAPI, PHP/Laravel, .NET/C#, Ruby/Rails, and React/Next.js/Vue. Reuse your framework bootstrap and implement the required durable persistence adapters; the skill is not a runnable application by itself.
 - **All 3 HMAC types** — transaction, card token, and subscription — with exact field orders, SHA-512, and timing-safe comparison.
 - **Reconciliation** — a Transaction Inquiry fallback for callbacks that never arrive, stuck "pending" orders, and admin lookups.
-- **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, refund/void, split features, convenience fees.
+- **An integration chooser** — guided questions that settle *how* the money is taken before any checkout code is written: one-off, subscriptions, saved cards, Auth/Capture, MOTO phone orders, marketplace splits. Each with a *choose it when / don't choose it when / worked example* card, what Paymob has to enable on the account, and which of the three HMAC types the callbacks will carry.
+- **Payment-method advice, not a catalog read-out** — per-region availability, refund support, and sandbox limits for every method, plus when to raise BNPL, Apple Pay, wallets or kiosk unprompted: at most two, tied to a signal the merchant gave, each with what it costs to add, never as a go-live blocker.
+- **Core & advanced features** — subscriptions, saved cards (CIT/MIT), Auth/Capture, MOTO and Verification, refund/void, split features, convenience fees.
 - **Post-integration management** — Paymob's go-live stages and a merchant-side go-live checklist, go-live document upload, day-to-day Dashboard operations (transactions, orders, links, users & roles), refunds in ops, balances and disputes, monitoring and daily reconciliation, key rotation, and plugin/SDK updates.
 - **Diagnose & get support** — routes each symptom to the right Paymob tool (Code Lab, HMAC Signature Troubleshooter, Postman export, Virtual Showroom, Store Check, Mobe, hooks.paymob.com) and drafts a **redacted** support ticket for the wizard's Contact Support form, `support@paymob.com`, or the MCP server.
 - **Live-doc discipline** — points at Paymob's `llms.txt` index, developer docs, Integration Wizard (Code Lab, Store Check, Mobe, Contact Support), and community forum so the agent can confirm anything that may have changed.
 - **Safe multi-agent execution** — separates codebase mapping, live-doc verification, and security review while keeping file edits and all live payment actions serialized through one primary agent.
-- **Slash commands** (Claude Code / Cowork) — `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac`, `/paymob-go-live-check`, and `/paymob-support-ticket` for sandbox credentials, error lookups, a webhook HMAC audit, a go-live readiness audit, and a redacted support-ticket draft. See [Commands](#commands-claude-code--cowork).
+- **Slash commands** (Claude Code / Cowork) — `/paymob-choose-integration`, `/paymob-suggest-methods`, `/paymob-test-cards`, `/paymob-explain-error`, `/paymob-check-hmac`, `/paymob-go-live-check`, and `/paymob-support-ticket` for picking an integration method, method recommendations, sandbox credentials, error lookups, a webhook HMAC audit, a go-live readiness audit, and a redacted support-ticket draft. See [Commands](#commands-claude-code--cowork).
 
 ---
 
@@ -193,6 +196,8 @@ Once the plugin is installed, these slash commands give direct access to the mos
 
 | Command | What it does |
 |---|---|
+| `/paymob-choose-integration [business description]` | Runs the questionnaire in `references/choose-integration.md` and recommends a payment model and checkout surface — one-off, subscriptions, saved cards (CIT→MIT), Auth/Capture, MOTO, marketplace splits — with a worked example, what Paymob must enable on the account, and which HMAC type the callbacks will carry. Mines the conversation and codebase first so it only asks what it can't infer. |
+| `/paymob-suggest-methods [business, region, order value]` | Recommends which payment methods to enable from `references/payment-methods.md` — at most two, each tied to a signal the merchant actually gave, each with what it costs to add (Paymob enablement, Live-only IDs, Apple Pay certificates, no sandbox path, no refunds). Never quotes fees, rates, or settlement timing. |
 | `/paymob-test-cards [card\|wallet\|kiosk\|bnpl]` | Prints sandbox test cards, wallet numbers, and OTPs from `references/test-credentials.md`, optionally filtered to one method. Always notes the 30-day sandbox expiry and that decline/error simulation isn't officially documented. For kiosk and BNPL it reports that sandbox can't test them at all, rather than offering a card as a stand-in. |
 | `/paymob-explain-error <code, status, or message>` | Looks up a Paymob error against the Troubleshooting table in `SKILL.md`, explains the cause, and — for code fixes — pulls the corrected snippet from the matching `references/code-*.md` file for your stack. Falls back to `references/live-resources.md` for anything not in the table instead of guessing. |
 | `/paymob-check-hmac [path]` | Statically audits your webhook HMAC verification against `references/hmac-verification.md`: SHA-512 (not SHA-256), exact field order, `body.obj` sourcing, no `obj.id`/`obj.order.id` mix-up, fail-closed behavior, and unique-constraint-backed idempotency. Never asks you to paste your HMAC secret or API key; only invoked manually, never automatically. |
@@ -202,6 +207,9 @@ Once the plugin is installed, these slash commands give direct access to the mos
 **Examples:**
 
 ```text
+/paymob-choose-integration we bill our gym members EGP 600 every month
+/paymob-choose-integration our call centre takes card details over the phone
+/paymob-suggest-methods furniture shop in Cairo, average order EGP 30,000
 /paymob-test-cards wallet
 /paymob-explain-error 401 on intention create
 /paymob-explain-error HMAC mismatch
@@ -389,11 +397,13 @@ Paymob-AI-Integration-Skill/
 ├── universal-prompt.md                # Portable prompt (Cursor, Windsurf, Copilot, ChatGPT, Gemini, …)
 ├── .mcp.json                          # Bundled Paymob MCP server (auto-registers when the plugin is enabled)
 ├── .codex-plugin/
-│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.4.1)
+│   └── plugin.json                    # Codex/ChatGPT plugin manifest (v3.6.0)
 ├── .claude-plugin/
-│   ├── plugin.json                    # Claude Code plugin manifest (v3.4.1)
+│   ├── plugin.json                    # Claude Code plugin manifest (v3.6.0)
 │   └── marketplace.json               # Claude custom marketplace catalog
 ├── commands/                          # Claude Code slash commands (additive, Claude-only)
+│   ├── paymob-choose-integration.md   # /paymob-choose-integration — pick the payment model + checkout surface
+│   ├── paymob-suggest-methods.md      # /paymob-suggest-methods — which payment methods suit this business
 │   ├── paymob-test-cards.md           # /paymob-test-cards — sandbox test cards/wallets
 │   ├── paymob-explain-error.md        # /paymob-explain-error — error code → cause + fix
 │   ├── paymob-check-hmac.md           # /paymob-check-hmac — static HMAC verification audit
@@ -406,6 +416,8 @@ Paymob-AI-Integration-Skill/
 │       │   └── openai.yaml            # Codex UI, invocation, and MCP metadata
 │       └── references/
 │           ├── replit.md              # Replit import verification, host restrictions, Secrets, callback setup
+│           ├── choose-integration.md  # Payment-model chooser: questionnaire, trade-offs, worked example per method
+│           ├── payment-methods.md     # Per-region method catalog, 3DS, instalments + when to suggest a method
 │           ├── shopify-apps.md        # Paymob Shopify apps (on-site / off-site / BNPL) + install path
 │           ├── intention-api.md       # Create Intention spec, Unified Checkout, common errors
 │           ├── mobile-sdks.md         # Native SDK flow (iOS / Android / Flutter / React Native)
@@ -422,7 +434,7 @@ Paymob-AI-Integration-Skill/
 │           ├── code-php.md            # PHP / Laravel
 │           ├── code-dotnet.md         # .NET / C# / ASP.NET
 │           ├── code-ruby.md           # Ruby / Rails
-│           └── code-frontend.md       # React / Next.js / Vue + Unified Checkout / Pixel SDK
+│           └── code-frontend.md       # React / Next.js / Vue + Unified Checkout / Pixel SDK / Affordability Widget
 ├── .gitignore                         # Excludes generated archives and Python caches
 ├── requirements-dev.txt               # PyYAML dependency for schema validation
 ├── scripts/
@@ -438,13 +450,16 @@ Paymob-AI-Integration-Skill/
 
 | Method | Regions | Notes |
 |--------|---------|-------|
-| **Cards** (Visa, MC, Amex, MADA, OmanNet) | EGY, KSA, UAE, OMN | 3DS, MOTO, Card-on-File, Auth/Cap |
-| **Mobile Wallets** (Vodafone Cash, Orange Cash, e& money, WePay, StcPay) | EGY, KSA | — |
-| **BNPLs** (Valu, Tabby, Tamara, Souhoola, Sympl, and more) | EGY, KSA, UAE | 15+ providers |
-| **Apple Pay** | EGY, KSA, UAE, OMN | Requires certificates |
-| **Google Pay** | KSA, UAE, OMN | Not yet in Egypt |
-| **Bank Installments** | EGY | Live IDs only |
-| **Kiosk** (Aman, Masary) | EGY | No refund support |
+| **Cards** (Visa, MC, Amex; + MADA KSA, Jaywan UAE, OmanNet OMN) | EGY, KSA, UAE, OMN | 3DS, MOTO, Card-on-File, Auth/Cap, Verification |
+| **Mobile Wallets** (Vodafone Cash, Orange Cash, e& money, We Pay, bank wallets, StcPay) | EGY, KSA | — |
+| **BNPLs** (Valu, Tabby, Tamara, Souhoola, Sympl, Halan, Forsa, Contact, and more) | EGY, KSA, UAE | 15 providers; refundable — 3 are full-refund-only |
+| **Apple Pay** | EGY, KSA, UAE, OMN | Certificates, plus domain verification for Pixel |
+| **Google Pay** | KSA, UAE | Live IDs only |
+| **Samsung Pay** | UAE | APIs only, Live IDs only |
+| **Bank Installments** | EGY | Live IDs only; Affordability Widget shows plans pre-checkout |
+| **Kiosk** (cash at an outlet) | EGY | No refund support; settles asynchronously |
+
+Full per-region catalog, per-provider BNPL refund support, and the rules for when to suggest a method: [`references/payment-methods.md`](skills/paymob-integration/references/payment-methods.md).
 
 ## Supported regions
 

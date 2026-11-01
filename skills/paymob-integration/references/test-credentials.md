@@ -40,15 +40,17 @@ Use these **only** with Test-mode keys and Test-mode Integration IDs. Never use 
 
 ⚠️ **These methods cannot be tested in sandbox at all.** No test credentials exist for them, and a payment cannot be completed end-to-end in Test mode. (Confirmed with Paymob, August 2026.)
 
-- **Kiosk** — Aman, Masary
-- **BNPL** — Valu, Souhoola, Tabby, Tamara, Sympl, and the other providers
+- **Kiosk** — cash paid at an outlet
+- **BNPL** — Valu, Souhoola, Tabby, Tamara, Sympl, and the other providers (15 in total — `payment-methods.md`)
 
 What that means in practice:
 
 - **This is not a launch blocker.** Every method goes through the same Intention API, Unified Checkout, and callback + HMAC verification, so a passing card test already validates effectively all of the merchant's own integration code. The merchant enables kiosk/BNPL in the Dashboard and goes live — see Phase 3 step 7 in `SKILL.md`.
 - Do **not** substitute a test card for one of these methods and then report the method itself as tested. The shared integration path is verified; the method-specific parts are not, and Phase 3 step 7 lists the four to check on the first real transaction (Integration ID, callback field shape, kiosk's asynchronous settlement, and refund support).
 
-**Not confirmed either way — don't assume:** Apple Pay, Google Pay, and bank installments. (`README.md` notes bank installments are "Live IDs only," which points the same way, but confirm with `support@paymob.com` before telling a merchant whether they can test it.) Don't infer a sandbox path for any of these from the card/wallet sections above.
+**Also Live-only, so no sandbox path either:** Apple Pay, Google Pay, Samsung Pay, and bank installments. Paymob's live payment-method docs state these have **Live integration IDs only** — and without a Test Integration ID there is no test intention to pay. Treat them like kiosk and BNPL above: not a launch blocker, verified on the first real transaction. If a merchant insists they can sandbox one of these, have them confirm with `support@paymob.com` rather than arguing from this file. Don't infer a sandbox path for any of these from the card/wallet sections above.
+
+Per-method availability, refund support, and what each needs enabled: `payment-methods.md`.
 
 ## Using them
 

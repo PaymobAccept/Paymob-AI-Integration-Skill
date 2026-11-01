@@ -177,6 +177,59 @@ Key options (full list in the docs above):
 
 > **Check before shipping.** Paymob's own sample loads `paymob-pixel@latest` from jsDelivr. For production, consider pinning a specific version so a new release can't change the checkout unexpectedly, and re-check the option names against the doc page above. Paymob's docs sample puts the Secret Key in the page for testing only — never do that; the Secret Key stays on the backend.
 
+## Option C — Affordability Widget (instalment plans on the product page)
+
+Not a checkout. This renders the available instalment plans *before* the customer reaches checkout, so a high-ticket item reads as "from EGP 2,500/month" while they're still deciding. Egypt, where bank instalments run. Background and when to offer it: `payment-methods.md` §4.
+
+It takes the **Public Key**, so it's safe in the browser.
+
+```html
+<div id="paymob-widget"></div>
+<script src="https://cdn.jsdelivr.net/npm/paymob-widget@latest/main.js" type="module"></script>
+```
+
+```javascript
+new PaymobWidget({
+  publicKey: 'egy_pk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+  elementId: 'paymob-widget',
+  amount: 3000000,            // full order total in cents — 30,000 EGP
+  currency: 'EGP',
+  integrationId: 5661185,     // the instalment integration; omit to use the most recent
+  theme: 'primary',           // 'primary' | 'light' | 'dark'
+  customerCanSelect: true,    // false (with no onSubmit) for a view-only display
+  onSubmit: async (plan) => {
+    // plan = { id, tenure (months), amount (monthly instalment, in cents) }
+    // Send ONLY plan.id. The backend prices the order itself.
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: currentOrderId, preSelectedPlan: plan.id }),
+    });
+    const { checkoutUrl } = await res.json();
+    window.location.href = checkoutUrl;
+  },
+});
+```
+
+The backend then puts the plan id on the Intention it was already building:
+
+```json
+{
+  "amount": 3000000,
+  "currency": "EGP",
+  "payment_methods": [5661185],
+  "pre_selected_plan": 123
+}
+```
+
+**Three things to get right:**
+
+1. **Only `plan.id` crosses to the backend.** `plan.amount` is the monthly figure and `amount` on the Intention is the full order total, read server-side from the merchant's own order record. Sending the widget's number straight through is how an order gets charged at a twelfth of its price — the widget is the easiest place in the whole integration to break the server-prices-the-order rule.
+2. **`customerCanSelect: false` with no `onSubmit`** hides the button entirely. Use it when the merchant only wants to advertise that plans exist.
+3. **Nothing renders when no plans match** that `integrationId` and `amount`. An empty space is usually the wrong Integration ID or an order below the plan's floor, not a broken script — check those before debugging the embed.
+
+> Same caveat as Pixel above: Paymob's sample loads `paymob-widget@latest` from jsDelivr. Pin a version for production, and re-check the parameter names against the live docs (`live-resources.md`) before shipping.
+
 ## Per-region base URL
 
 Swap `accept.paymob.com` for the merchant's region in any URL the frontend builds or receives:
